@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Plants>
+    <Plant id="PeaShooter">
+        <Name>豌豆射手</Name>
+        <Description>
+            豌豆射手，你的第一道防线。它们通过发射豌豆来攻击僵尸。
+        </Description>
+        <Sunshine>100</Sunshine>
+        <Cooldown>5</Cooldown>
+        <Hp>200</Hp>
+        <Render>
+            <Atlas>reanim-spine/pea_shooter.atlas</Atlas>
+            <Skeleton>reanim-spine/pea_shooter.skel</Skeleton>
+        </Render>
+        <Shoot>
+            <Cooldown>1.5</Cooldown>
+            <Projectile>
+                <Type>Pea</Type>
+                <Track>
+                    <Line direction="0" />
+                </Track>
+                <Timing>0.15</Timing>
+                <OffsetX>34.202</OffsetX>
+                <OffsetY>61.781</OffsetY>
+            </Projectile>
+        </Shoot>
+    </Plant>
+    <Plant id="Sunflower">
+        <Name>向日葵</Name>
+        <Description>
+            为你提供额外的阳光。
+        </Description>
+        <Sunshine>50</Sunshine>
+        <Cooldown>5</Cooldown>
+        <Hp>200</Hp>
+        <Render>
+            <Atlas>reanim-spine/sunflower.atlas</Atlas>
+            <Skeleton>reanim-spine/sunflower.skel</Skeleton>
+        </Render>
+    </Plant>
+</Plants>

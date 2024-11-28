@@ -1,0 +1,28 @@
+[workspace]
+members = [
+  "app",
+  "bin/bin_windows",
+  "consts",
+  "fw/fw_actor",
+  "fw/fw_anim",
+  "fw/fw_cursor",
+  "fw/fw_ftxm",
+  "mod/mod_plant",
+  "mod/mod_zombie",
+  "scene/scene_base",
+  "scene/scene_game", "scene/scene_title",
+  "scene_res/scene_res_game",
+]
+resolver = "2"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+codegen-units = 1
+debug = false
+lto = "thin"
+strip = "symbols"

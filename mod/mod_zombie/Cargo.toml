@@ -1,0 +1,12 @@
+[package]
+edition = "2021"
+name = "mod_zombie"
+version = "0.1.0"
+
+[dependencies]
+bevy = "0.14.2"
+bevy_spine = "0.10.1"
+consts = {path = "../../consts"}
+fw_actor = {path = "../../fw/fw_actor"}
+serde = {version = "1.0.215", features = ["derive"]}
+serde-xml-rs = "0.6.0"

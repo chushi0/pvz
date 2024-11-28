@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Zombies>
+    <Zombie id="Basic">
+        <Name>僵尸</Name>
+        <Description>
+            普通僵尸。
+        </Description>
+        <Hp>
+            <Real>200</Real>
+            <Critical>70</Critical>
+        </Hp>
+        <Speed>20</Speed>
+        <Attack>100</Attack>
+        <Render>
+            <Atlas>reanim-spine/zombie.atlas</Atlas>
+            <Skeleton>reanim-spine/zombie.skel</Skeleton>
+        </Render>
+    </Zombie>
+    <Zombie id="Flag">
+        <Name>摇旗僵尸</Name>
+        <Description>
+            摇旗僵尸标志着即将来袭的一大堆僵尸“流”。
+        </Description>
+        <Hp>
+            <Real>200</Real>
+            <Critical>70</Critical>
+        </Hp>
+        <Speed>25</Speed>
+        <Attack>100</Attack>
+        <Render>
+            <Atlas>reanim-spine/zombie-flag.atlas</Atlas>
+            <Skeleton>reanim-spine/zombie-flag.skel</Skeleton>
+        </Render>
+    </Zombie>
+    <Zombie id="Conehead">
+        <Name>路障僵尸</Name>
+        <Description>
+            他的路障头盔，使他两倍坚韧于普通僵尸。
+        </Description>
+        <Hp>
+            <Real>200</Real>
+            <Armor>370</Armor>
+            <Critical>70</Critical>
+        </Hp>
+        <Speed>20</Speed>
+        <Attack>100</Attack>
+        <Render>
+            <Atlas>reanim-spine/zombie-conehead.atlas</Atlas>
+            <Skeleton>reanim-spine/zombie-conehead.skel</Skeleton>
+        </Render>
+    </Zombie>
+    <Zombie id="PoleVaulting">
+        <Name>撑杆僵尸</Name>
+        <Description>
+            撑杆僵尸运用标杆高高地跃过障碍物。
+        </Description>
+        <Hp>
+            <Real>300</Real>
+            <Critical>70</Critical>
+        </Hp>
+        <Speed>30</Speed>
+        <Attack>100</Attack>
+        <Render>
+            <Atlas>reanim-spine/zombie-polevaluting.atlas</Atlas>
+            <Skeleton>reanim-spine/zombie-polevaluting.skel</Skeleton>
+        </Render>
+        <Jump>
+            <Times>1</Times>
+            <PrecastDelay>0</PrecastDelay>
+            <Speed>20</Speed>
+        </Jump>
+    </Zombie>
+    <Zombie id="Buckethead">
+        <Name>铁桶僵尸</Name>
+        <Description>
+            他的铁桶头盔能极大程度的承受伤害，且防御力强于路障僵尸。
+        </Description>
+        <Hp>
+            <Real>200</Real>
+            <Armor>1100</Armor>
+            <Critical>70</Critical>
+        </Hp>
+        <Speed>20</Speed>
+        <Attack>100</Attack>
+        <Render>
+            <Atlas>reanim-spine/zombie-buckethead.atlas</Atlas>
+            <Skeleton>reanim-spine/zombie-buckethead.skel</Skeleton>
+        </Render>
+    </Zombie>
+</Zombies>

@@ -1,0 +1,9 @@
+[package]
+edition = "2021"
+name = "fw_actor"
+version = "0.1.0"
+
+[dependencies]
+bevy = "0.14.2"
+bevy_spine = "0.10.1"
+consts = {path = "../../consts"}

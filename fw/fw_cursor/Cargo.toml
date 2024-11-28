@@ -1,0 +1,7 @@
+[package]
+edition = "2021"
+name = "fw_cursor"
+version = "0.1.0"
+
+[dependencies]
+bevy = "0.14.2"

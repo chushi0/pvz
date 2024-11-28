@@ -1,0 +1,20 @@
+[package]
+edition = "2021"
+name = "app"
+version = "0.1.0"
+
+[dependencies]
+fw_actor = {path = "../fw/fw_actor"}
+fw_anim = {path = "../fw/fw_anim"}
+fw_cursor = {path = "../fw/fw_cursor"}
+fw_ftxm = {path = "../fw/fw_ftxm"}
+mod_plant = {path = "../mod/mod_plant"}
+mod_zombie = {path = "../mod/mod_zombie"}
+scene_base = {path = "../scene/scene_base"}
+scene_game = {path = "../scene/scene_game"}
+scene_res_game = {path = "../scene_res/scene_res_game"}
+scene_title = {path = "../scene/scene_title"}
+
+bevy = {version = "0.14.2", features = ["jpeg"]}
+bevy_spine = "0.10.1"
+zune-jpeg = {version = "0.5.0-rc0"}

@@ -1,0 +1,9 @@
+[package]
+edition = "2021"
+name = "fw_ftxm"
+version = "0.1.0"
+
+[dependencies]
+bevy = "0.14.2"
+libxm = {git = "https://github.com/chushi0/libxm-rs"}
+rodio = "0.20.1"
