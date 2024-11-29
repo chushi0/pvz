@@ -7,7 +7,7 @@ members = [
   "fw/fw_anim",
   "fw/fw_cursor",
   "fw/fw_ftxm",
-  "mod/mod_plant",
+  "mod/mod_plant", "mod/mod_userdata",
   "mod/mod_zombie",
   "scene/scene_base",
   "scene/scene_game", "scene/scene_title",

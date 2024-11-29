@@ -9,6 +9,7 @@ fw_anim = {path = "../fw/fw_anim"}
 fw_cursor = {path = "../fw/fw_cursor"}
 fw_ftxm = {path = "../fw/fw_ftxm"}
 mod_plant = {path = "../mod/mod_plant"}
+mod_userdata = {path = "../mod/mod_userdata"}
 mod_zombie = {path = "../mod/mod_zombie"}
 scene_base = {path = "../scene/scene_base"}
 scene_game = {path = "../scene/scene_game"}

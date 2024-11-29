@@ -31,6 +31,7 @@ pub fn main() {
         .add_plugins(fw_actor::FwActorPlugin)
         .add_plugins(mod_plant::ModPlantPlugin)
         .add_plugins(mod_zombie::ModZombiePlugin)
+        .add_plugins(mod_userdata::ModUserdataPlugin)
         .add_plugins(scene_res_game::SceneResGamePlugin)
         .add_plugins(scene_base::SceneBasePlugin)
         .add_plugins(scene_title::SceneTitlePlugin)

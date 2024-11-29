@@ -183,6 +183,7 @@ dependencies = [
  "fw_cursor",
  "fw_ftxm",
  "mod_plant",
+ "mod_userdata",
  "mod_zombie",
  "scene_base",
  "scene_game",
@@ -2532,6 +2533,14 @@ dependencies = [
  "fw_cursor",
  "serde",
  "serde-xml-rs",
+]
+
+[[package]]
+name = "mod_userdata"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "mod_plant",
 ]
 
 [[package]]

@@ -1,0 +1,8 @@
+[package]
+edition = "2021"
+name = "mod_userdata"
+version = "0.1.0"
+
+[dependencies]
+bevy = "0.14.2"
+mod_plant = {path = "../mod_plant"}
