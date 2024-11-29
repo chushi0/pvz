@@ -325,6 +325,10 @@ pub(crate) struct ChooseableSeedTag;
 #[derive(Component)]
 pub(crate) struct SeedTransformInChooserBox(pub Transform);
 
+// 移动计时器，在时间结束后移除速度和加速度
+#[derive(Component)]
+pub(crate) struct MoveTimer(pub Timer);
+
 impl PlantSolt {
     // 按默认僵尸啃食顺序返回植物
     pub fn plants(&self) -> [Option<Entity>; 4] {

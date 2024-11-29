@@ -39,7 +39,7 @@ use crate::{
         BootCleanerCar, ChooseableSeedTag, CleanerCar, ColorAlphaFade, DelayShowProjectile,
         FollowCameraTag, FollowCursorTag, Freeze, GameTimer, GameTimerTag, GameUiTag, ImageCutAnim,
         InvincibleTag, LanePosition, LevelProgressFlagTag, LevelProgressHeadTag,
-        LevelProgressProgressTag, MaterialColorAnim, MoveAcceleration, MoveVelocity,
+        LevelProgressProgressTag, MaterialColorAnim, MoveAcceleration, MoveTimer, MoveVelocity,
         NaturalSunshineSolt, PickSeed, PickableSeed, PlantShootTag, PlantSolt, PlantTag,
         ProjectileCooldown, ProjectileTag, RewardSolt, RewardTag, SceneTag, SeedChooserTag,
         SeedTransformInChooserBox, SeedbankTag, ShowLevelProgressShiftLeft, SoltType,
@@ -2462,8 +2462,30 @@ pub(crate) fn check_summon_reward(
     // 销毁奖励槽，避免重复创建奖励
     commands.entity(reward_solt_entity).despawn_recursive();
 
-    // 生成奖励
+    // 生成奖励位置
     let reward_start_translation = reward_solt_transform.translation();
+    let reward_start_translation = Vec2 {
+        x: reward_start_translation.x,
+        y: reward_start_translation.y,
+    };
+    // 必须保证在安全区内
+    let mut safe_reward_translation = Vec2 {
+        x: reward_start_translation.x.clamp(-350.0, 350.0),
+        y: reward_start_translation.y.clamp(-250.0, 250.0),
+    };
+    // 随机偏移
+    let mut rng = thread_rng();
+    safe_reward_translation.x += rng.gen_range(-20.0..20.0);
+    safe_reward_translation.y += rng.gen_range(-20.0..20.0);
+    // 计算初始速度
+    let initial_velocity = calculate_throw_initial_velocity(
+        reward_start_translation,
+        safe_reward_translation,
+        -1000.0,
+        1.0,
+    );
+
+    // 生成奖励
     match settings.reward {
         Reward::PlantSeed(plant_type) => commands
             .spawn((
@@ -2477,10 +2499,25 @@ pub(crate) fn check_summon_reward(
                 },
                 RewardTag,
                 SceneTag,
+                MoveVelocity(initial_velocity),
+                MoveAcceleration(Vec2 { x: 0.0, y: -1000.0 }),
+                MoveTimer(Timer::new(Duration::from_secs_f32(1.0), TimerMode::Once)),
             ))
             .id(),
         Reward::MoneyBag => todo!(),
     };
+}
+
+// 计算斜抛运动的初始速度
+fn calculate_throw_initial_velocity(start: Vec2, end: Vec2, gravity: f32, time: f32) -> Vec2 {
+    // 水平方向：匀速运动
+    let x = (end.x - start.x) / time;
+    // 竖直方向：匀变速运动
+    // x = vt + 0.5at^2
+    // v = x/t - 0.5at
+    let y = (end.y - start.y) / time - 0.5 * gravity * time;
+
+    Vec2 { x, y }
 }
 
 pub(crate) fn input_pick_reward_seed(
@@ -2743,4 +2780,21 @@ pub(crate) fn start_game_button(
         GameTimerTag::EnterState(GameState::Enter),
         SceneTag,
     ));
+}
+
+pub(crate) fn check_remove_movement(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut targets: Query<(Entity, &mut MoveTimer)>,
+) {
+    for (entity, mut timer) in &mut targets {
+        timer.0.tick(time.delta());
+        if !timer.0.just_finished() {
+            continue;
+        }
+
+        commands
+            .entity(entity)
+            .remove::<(MoveVelocity, MoveAcceleration, MoveTimer)>();
+    }
 }

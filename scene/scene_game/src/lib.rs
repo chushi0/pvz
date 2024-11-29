@@ -172,6 +172,7 @@ impl Plugin for SceneGamePlugin {
                     (
                         update::update_velocity,
                         update::update_movement,
+                        update::check_remove_movement,
                         update::despawn_schedule_entity,
                         update::update_lane_position,
                         update::remove_outrange_projectile,
