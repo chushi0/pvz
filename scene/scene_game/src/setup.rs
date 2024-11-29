@@ -385,9 +385,28 @@ pub(crate) fn setup_seedbank(
         });
 }
 
-pub(crate) fn setup_cleanup_car(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub(crate) fn setup_cleanup_car(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    current_level: Res<CurrentLevel>,
+) {
     let car = asset_server.load("reanim-merge/LawnMower.png");
-    for lane in 0..5 {
+    let car_lane = match &current_level.background {
+        LevelBackground::Day {
+            sod_type,
+            upgrade_sod_type,
+        } => match (sod_type, upgrade_sod_type) {
+            (SodType::None, false) => vec![],
+            (SodType::None, true) | (SodType::SodRow1, false) => vec![2],
+            (SodType::SodRow1, true) | (SodType::SodRow3, false) => vec![1, 2, 3],
+            (SodType::SodRow3, true) | (SodType::SodRow5, _) => vec![0, 1, 2, 3, 4],
+        },
+        LevelBackground::Night => vec![0, 1, 2, 3, 4],
+        LevelBackground::Swim | LevelBackground::SwimFog => vec![0, 1, 2, 3, 4, 5],
+        LevelBackground::Roof | LevelBackground::RoofNight => vec![0, 1, 2, 3, 4],
+    };
+
+    for lane in car_lane {
         commands.spawn((
             SpriteBundle {
                 sprite: Sprite {
