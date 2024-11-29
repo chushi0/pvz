@@ -28,6 +28,7 @@ pub fn main() {
         .add_plugins(fw_anim::FwAnimPlugin)
         .add_plugins(fw_ftxm::FwFtxmPlugin)
         .add_plugins(fw_cursor::FwCursorPlugin)
+        .add_plugins(fw_button::FwButtonPlugin)
         .add_plugins(fw_actor::FwActorPlugin)
         .add_plugins(mod_plant::ModPlantPlugin)
         .add_plugins(mod_zombie::ModZombiePlugin)

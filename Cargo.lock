@@ -180,6 +180,7 @@ dependencies = [
  "bevy_spine",
  "fw_actor",
  "fw_anim",
+ "fw_button",
  "fw_cursor",
  "fw_ftxm",
  "mod_plant",
@@ -1892,6 +1893,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "fw_button"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "fw_cursor",
+]
+
+[[package]]
 name = "fw_cursor"
 version = "0.1.0"
 dependencies = [
@@ -3449,6 +3458,7 @@ dependencies = [
  "consts",
  "fw_actor",
  "fw_anim",
+ "fw_button",
  "fw_cursor",
  "fw_ftxm",
  "mod_plant",

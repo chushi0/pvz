@@ -9,8 +9,12 @@ use bevy::{
 use bevy_spine::prelude::*;
 use fw_actor::components::AnimStandbyTag;
 use fw_anim::{AnimationBundle, AnimationClip, AnimationClips, CustomAnimationTrigger, KeyFrame};
+use fw_button::components::{ButtonBackground, ButtonBundle, ButtonHotspot};
 use fw_ftxm::{FtxmSource, MainMusicTable};
-use mod_plant::{components::PlantSeedBundle, metadata::PlantRegistry};
+use mod_plant::{
+    components::{PlantSeed, PlantSeedBundle, PlantUsable},
+    metadata::{PlantRegistry, PlantType},
+};
 use mod_userdata::UserData;
 use mod_zombie::components::{AnimZombieEatTag, AnimZombieMoveTag};
 use rand::{thread_rng, Rng};
@@ -19,10 +23,11 @@ use scene_res_game::{Background, GameSceneSettings, SodType};
 use crate::{
     resource::{Sunshine, ZombieWaveController},
     tag::{
-        CleanerCar, GameTimer, GameTimerTag, GameUiTag, LanePosition, MaterialColorAnim,
-        NaturalSunshineSolt, PickableSeed, PlantSolt, RewardSolt, RewardTag, SceneTag, SeedbankTag,
-        ShowLevelProgressShiftLeft, SoltType, StandbyZombieTag, SunshineText, ZombieSolt,
-        ZombieTag,
+        ChooseableSeedTag, CleanerCar, FollowCameraTag, GameTimer, GameTimerTag, GameUiTag,
+        LanePosition, MaterialColorAnim, NaturalSunshineSolt, PickableSeed, PlantSolt, RewardSolt,
+        RewardTag, SceneTag, SeedChooserTag, SeedTransformInChooserBox, SeedbankTag,
+        ShowLevelProgressShiftLeft, SoltType, StandbyZombieTag, StartGameButtonTag, SunshineText,
+        ZombieSolt, ZombieTag,
     },
     GameState,
 };
@@ -313,57 +318,68 @@ pub(crate) fn setup_seedbank(
 
     commands
         .spawn((
-            SpriteBundle {
-                sprite: Sprite {
-                    anchor: Anchor::TopLeft,
-                    custom_size: Some(Vec2 {
-                        x: 80.0 + 12.0 + 5.0 + 55.0 * userdata.plant_solt_count as f32,
-                        y: 87.0,
-                    }),
-                    ..Default::default()
-                },
-                texture: seedbank,
-                visibility: Visibility::Hidden,
-                transform: Transform::from_xyz(-400.0, 300.0, 1.0),
-                ..Default::default()
-            },
-            ImageScaleMode::Sliced(TextureSlicer {
-                border: BorderRect {
-                    left: 80.0,
-                    right: 12.0,
-                    top: 8.0,
-                    bottom: 8.0,
-                },
-                center_scale_mode: SliceScaleMode::Stretch,
-                sides_scale_mode: SliceScaleMode::Stretch,
-                max_corner_scale: 1.0,
-            }),
+            FollowCameraTag,
+            Transform::default(),
+            GlobalTransform::default(),
+            ViewVisibility::default(),
+            Visibility::default(),
+            InheritedVisibility::default(),
             SceneTag,
-            SeedbankTag,
             GameUiTag,
         ))
         .with_children(|parent| {
-            parent.spawn((
-                Text2dBundle {
-                    text: Text {
-                        sections: vec![TextSection {
-                            value: "50".to_string(),
-                            style: TextStyle {
-                                color: Color::BLACK,
-                                ..Default::default()
-                            },
-                        }],
+            parent
+                .spawn((
+                    SpriteBundle {
+                        sprite: Sprite {
+                            anchor: Anchor::TopLeft,
+                            custom_size: Some(Vec2 {
+                                x: 80.0 + 12.0 + 5.0 + 55.0 * userdata.plant_solt_count as f32,
+                                y: 87.0,
+                            }),
+                            ..Default::default()
+                        },
+                        texture: seedbank,
+                        visibility: Visibility::Hidden,
+                        transform: Transform::from_xyz(-400.0, 300.0, 1.0),
                         ..Default::default()
                     },
-                    text_anchor: Anchor::Center,
-                    text_2d_bounds: Text2dBounds {
-                        size: Vec2 { x: 56.0, y: 22.0 },
-                    },
-                    transform: Transform::from_xyz(39.0, -73.0, 0.01),
-                    ..Default::default()
-                },
-                SunshineText,
-            ));
+                    ImageScaleMode::Sliced(TextureSlicer {
+                        border: BorderRect {
+                            left: 80.0,
+                            right: 12.0,
+                            top: 8.0,
+                            bottom: 8.0,
+                        },
+                        center_scale_mode: SliceScaleMode::Stretch,
+                        sides_scale_mode: SliceScaleMode::Stretch,
+                        max_corner_scale: 1.0,
+                    }),
+                    SeedbankTag,
+                ))
+                .with_children(|parent| {
+                    parent.spawn((
+                        Text2dBundle {
+                            text: Text {
+                                sections: vec![TextSection {
+                                    value: "50".to_string(),
+                                    style: TextStyle {
+                                        color: Color::BLACK,
+                                        ..Default::default()
+                                    },
+                                }],
+                                ..Default::default()
+                            },
+                            text_anchor: Anchor::Center,
+                            text_2d_bounds: Text2dBounds {
+                                size: Vec2 { x: 56.0, y: 22.0 },
+                            },
+                            transform: Transform::from_xyz(39.0, -73.0, 0.01),
+                            ..Default::default()
+                        },
+                        SunshineText,
+                    ));
+                });
         });
 }
 
@@ -524,27 +540,37 @@ pub(crate) fn setup_init_timer(
 
     // 检查是否需要选卡
     // TODO: 目前仅判断植物槽数量
-    if userdata.unlock_plugins.len() < userdata.plant_solt_count {
+    if userdata.unlock_plugins.len() <= userdata.plant_solt_count {
         // 植物数量小于植物槽，无需选卡
         // 需要在seedbank位置生成对应植物
         let mut unlock_plugins = userdata.unlock_plugins.iter().collect::<Vec<_>>();
         unlock_plugins.sort();
         for (i, plant) in unlock_plugins.into_iter().enumerate() {
-            commands.spawn((
-                PlantSeedBundle {
-                    transform: Transform::from_translation(Vec3 {
-                        x: 85.0 + 55.0 * i as f32 + 55.0 * 0.5 - 400.0,
-                        y: -8.0 - 35.0 + 300.0,
-                        z: 1.1,
-                    }),
-                    visibility: Visibility::Hidden,
-                    ..PlantSeedBundle::new(plant_registry.get(plant).unwrap().clone())
-                },
-                SceneTag,
-                PickableSeed,
-                GameUiTag,
-                SeedbankTag,
-            ));
+            commands
+                .spawn((
+                    FollowCameraTag,
+                    Transform::default(),
+                    GlobalTransform::default(),
+                    ViewVisibility::default(),
+                    Visibility::default(),
+                    InheritedVisibility::default(),
+                    SceneTag,
+                    GameUiTag,
+                ))
+                .with_children(|parent| {
+                    parent.spawn((
+                        PlantSeedBundle {
+                            transform: Transform::from_translation(Vec3 {
+                                x: 85.0 + 55.0 * i as f32 + 55.0 * 0.5 - 400.0,
+                                y: -8.0 - 35.0 + 300.0,
+                                z: 1.1,
+                            }),
+                            visibility: Visibility::Hidden,
+                            ..PlantSeedBundle::new(plant_registry.get(plant).unwrap().clone())
+                        },
+                        SeedbankTag,
+                    ));
+                });
         }
 
         // 进Enter状态
@@ -560,6 +586,206 @@ pub(crate) fn setup_init_timer(
     commands.spawn((
         GameTimer(Timer::from_seconds(time, TimerMode::Once)),
         GameTimerTag::EnterState(GameState::ChooseSeed),
+        SceneTag,
+    ));
+}
+
+pub(crate) fn insert_seed_pickable_tag(
+    mut commands: Commands,
+    seeds: Query<Entity, (With<PlantSeed>, With<SeedbankTag>)>,
+) {
+    for entity in &seeds {
+        commands.entity(entity).insert(PickableSeed);
+    }
+}
+
+pub(crate) fn setup_seed_chooser(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    userdata: Res<UserData>,
+    plant_registry: Res<PlantRegistry>,
+) {
+    let seed_chooser = asset_server.load("images/SeedChooser_Background.png");
+    let font = asset_server.load("font/fzcgbk.ttf");
+
+    // 底图
+    commands
+        .spawn((
+            FollowCameraTag,
+            Transform::default(),
+            GlobalTransform::default(),
+            ViewVisibility::default(),
+            Visibility::default(),
+            InheritedVisibility::default(),
+            SceneTag,
+            GameUiTag,
+        ))
+        .with_children(|parent| {
+            parent
+                .spawn((
+                    SpriteBundle {
+                        sprite: Sprite {
+                            anchor: Anchor::BottomLeft,
+                            ..Default::default()
+                        },
+                        texture: seed_chooser,
+                        visibility: Visibility::Hidden,
+                        transform: Transform::from_xyz(-400., -300., 1.0),
+                        ..Default::default()
+                    },
+                    SeedChooserTag,
+                ))
+                .with_children(|parent| {
+                    // 标题
+                    parent.spawn(Text2dBundle {
+                        text: Text {
+                            sections: vec![TextSection {
+                                value: "选择你的植物".to_string(),
+                                style: TextStyle {
+                                    font: font.clone(),
+                                    color: Color::srgb(0.83, 0.67, 0.07),
+                                    ..Default::default()
+                                },
+                            }],
+                            ..Default::default()
+                        },
+                        text_anchor: Anchor::Center,
+                        transform: Transform::from_xyz(232.0, 513.0 - 14.0, 0.01),
+                        ..Default::default()
+                    });
+
+                    // 按钮
+                    parent
+                        .spawn((
+                            ButtonBundle {
+                                background: ButtonBackground {
+                                    normal: asset_server.load("images/SeedChooser_Button.png"),
+                                    hover: asset_server.load("images/SeedChooser_Button_Glow.png"),
+                                    pressed: asset_server
+                                        .load("images/SeedChooser_Button_Glow.png"),
+                                    disabled: asset_server
+                                        .load("images/SeedChooser_Button_Disabled.png"),
+                                },
+                                sprite: SpriteBundle {
+                                    sprite: Sprite {
+                                        anchor: Anchor::Center,
+                                        ..Default::default()
+                                    },
+                                    transform: Transform::from_xyz(232.0, 513.0 - 475.0, 0.01),
+                                    ..Default::default()
+                                },
+                                hotspot: ButtonHotspot(vec![Rect {
+                                    min: Vec2 { x: -78.0, y: -21.0 },
+                                    max: Vec2 { x: 78.0, y: 21.0 },
+                                }]),
+                                ..Default::default()
+                            },
+                            StartGameButtonTag,
+                        ))
+                        .with_children(|parent| {
+                            parent.spawn(Text2dBundle {
+                                text: Text {
+                                    sections: vec![TextSection {
+                                        value: "一起摇滚吧！".to_string(),
+                                        style: TextStyle {
+                                            font: font.clone(),
+                                            color: Color::srgb(0.83, 0.67, 0.07),
+                                            ..Default::default()
+                                        },
+                                    }],
+                                    ..Default::default()
+                                },
+                                text_anchor: Anchor::Center,
+                                transform: Transform::from_xyz(0.0, 0.0, 0.01),
+                                ..Default::default()
+                            });
+                        });
+                });
+        });
+
+    // 所有已解锁植物，供选择
+    for plants in &userdata.unlock_plugins {
+        // 转为数字，以便计算坐标
+        let i = *plants as i32;
+        let x = i % 8;
+        let y = i / 8;
+
+        // 位置
+        let seed_transform = Transform::from_translation(Vec3 {
+            x: 25.0 + (50.0 * 0.9 + 5.0) * x as f32 + 55.0 * 0.5 - 400.0,
+            y: -25.0 - y as f32 * (70. * 0.9 + 5.) + 165.0,
+            z: 1.5,
+        })
+        .with_scale(Vec3::ONE * 0.95);
+
+        // 可点击的种子包
+        commands
+            .spawn((
+                FollowCameraTag,
+                Transform::default(),
+                GlobalTransform::default(),
+                ViewVisibility::default(),
+                Visibility::default(),
+                InheritedVisibility::default(),
+                GameUiTag,
+                SceneTag,
+            ))
+            .with_children(|parent| {
+                parent.spawn((
+                    PlantSeedBundle {
+                        transform: seed_transform,
+                        visibility: Visibility::Hidden,
+                        ..PlantSeedBundle::new(
+                            plant_registry.get(&PlantType::PeaShooter).unwrap().clone(),
+                        )
+                    },
+                    SeedChooserTag,
+                    ChooseableSeedTag,
+                    SeedTransformInChooserBox(seed_transform),
+                ));
+            });
+
+        // 底下再生成一个不可选择的暗色种子包，用于在选择后依然可以知道这里原本是什么植物
+        commands
+            .spawn((
+                FollowCameraTag,
+                Transform::default(),
+                GlobalTransform::default(),
+                ViewVisibility::default(),
+                Visibility::default(),
+                InheritedVisibility::default(),
+                GameUiTag,
+                SceneTag,
+            ))
+            .with_children(|parent| {
+                parent.spawn((
+                    PlantSeedBundle {
+                        transform: seed_transform.with_translation(Vec3 {
+                            x: seed_transform.translation.x,
+                            y: seed_transform.translation.y,
+                            z: seed_transform.translation.z - 0.1,
+                        }),
+                        visibility: Visibility::Hidden,
+                        usable: PlantUsable::Unusable,
+                        ..PlantSeedBundle::new(
+                            plant_registry.get(&PlantType::PeaShooter).unwrap().clone(),
+                        )
+                    },
+                    SeedChooserTag,
+                ));
+            });
+    }
+}
+
+pub(crate) fn setup_choose_seed_timer(mut commands: Commands) {
+    commands.spawn((
+        GameTimer(Timer::from_seconds(0.0, TimerMode::Once)),
+        GameTimerTag::FadeInSeedBank,
+        SceneTag,
+    ));
+    commands.spawn((
+        GameTimer(Timer::from_seconds(0.0, TimerMode::Once)),
+        GameTimerTag::FadeInSeedChooser,
         SceneTag,
     ));
 }

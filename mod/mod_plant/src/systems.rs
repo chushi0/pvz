@@ -192,7 +192,7 @@ pub(crate) fn update_cooldown_overlay(
                     *visibility = Visibility::Hidden;
                 }
                 PlantCooldown::Cooldown(duration) => {
-                    *visibility = Visibility::Visible;
+                    *visibility = Visibility::Inherited;
 
                     let percent = duration.as_secs_f32() / plant_info.cooldown;
                     transform.scale.y = 70.0 * percent;
@@ -214,7 +214,7 @@ pub(crate) fn update_usable_overlay(
             };
             *visibility = match usable {
                 PlantUsable::Usable => Visibility::Hidden,
-                PlantUsable::Unusable => Visibility::Visible,
+                PlantUsable::Unusable => Visibility::Inherited,
             };
         }
     }

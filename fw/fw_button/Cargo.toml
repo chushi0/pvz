@@ -1,0 +1,8 @@
+[package]
+edition = "2021"
+name = "fw_button"
+version = "0.1.0"
+
+[dependencies]
+bevy = "0.14.2"
+fw_cursor = {path = "../fw_cursor"}

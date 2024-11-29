@@ -9,6 +9,7 @@ use fw_actor::{
     play_anim,
 };
 use fw_anim::{AnimationBundle, AnimationClip, AnimationClips, CustomAnimationTrigger, KeyFrame};
+use fw_button::components::{Button, ButtonEnabled, ButtonInteraction};
 use fw_cursor::CursorPosition;
 use fw_ftxm::FtxmAudioSink;
 use mod_plant::{
@@ -20,6 +21,7 @@ use mod_plant::{
         PlantDetect, PlantPosition, PlantRegistry, PlantType, ProjectileTrack, ProjectileType,
     },
 };
+use mod_userdata::UserData;
 use mod_zombie::{
     components::{
         AnimZombieCriticalTag, AnimZombieEatStopTag, AnimZombieEatTag, AnimZombieFullDamageTag,
@@ -34,14 +36,15 @@ use scene_res_game::{Background, GameSceneSettings, Reward, SodType, WaveType};
 use crate::{
     resource::ZombieWaveController,
     tag::{
-        BootCleanerCar, CleanerCar, ColorAlphaFade, DelayShowProjectile, FollowCursorTag, Freeze,
-        GameTimer, GameTimerTag, GameUiTag, ImageCutAnim, InvincibleTag, LanePosition,
-        LevelProgressFlagTag, LevelProgressHeadTag, LevelProgressProgressTag, MaterialColorAnim,
-        MoveAcceleration, MoveVelocity, NaturalSunshineSolt, PickSeed, PickableSeed, PlantShootTag,
-        PlantSolt, PlantTag, ProjectileCooldown, ProjectileTag, RewardSolt, RewardTag, SceneTag,
-        SeedbankTag, ShowLevelProgressShiftLeft, SoltType, SunshineTag, SunshineText, ToDespawn,
-        ToSpawnZombie, ZombieAttackableTag, ZombieCriticalTag, ZombieEatTag, ZombieHpAnim,
-        ZombieSolt, ZombieTag,
+        BootCleanerCar, ChooseableSeedTag, CleanerCar, ColorAlphaFade, DelayShowProjectile,
+        FollowCameraTag, FollowCursorTag, Freeze, GameTimer, GameTimerTag, GameUiTag, ImageCutAnim,
+        InvincibleTag, LanePosition, LevelProgressFlagTag, LevelProgressHeadTag,
+        LevelProgressProgressTag, MaterialColorAnim, MoveAcceleration, MoveVelocity,
+        NaturalSunshineSolt, PickSeed, PickableSeed, PlantShootTag, PlantSolt, PlantTag,
+        ProjectileCooldown, ProjectileTag, RewardSolt, RewardTag, SceneTag, SeedChooserTag,
+        SeedTransformInChooserBox, SeedbankTag, ShowLevelProgressShiftLeft, SoltType,
+        StartGameButtonTag, SunshineTag, SunshineText, ToDespawn, ToSpawnZombie,
+        ZombieAttackableTag, ZombieCriticalTag, ZombieEatTag, ZombieHpAnim, ZombieSolt, ZombieTag,
     },
     GameState, Sunshine,
 };
@@ -53,6 +56,8 @@ pub(crate) struct UpdateTimerSystem {
     fade_in_seed_bank: SystemId,
     fade_in_conveyer_belt: SystemId,
     fade_in_cars: SystemId,
+    fade_in_seed_chooser: SystemId,
+    fade_out_seed_chooser: SystemId,
     show_level_progress: SystemId,
     text_ready: SystemId,
     text_set: SystemId,
@@ -91,6 +96,8 @@ pub(crate) fn update_timer(
             fade_in_seed_bank: commands.register_one_shot_system(trigger_fade_in_seed_bank),
             fade_in_conveyer_belt: commands.register_one_shot_system(trigger_fade_in_conveyer_belt),
             fade_in_cars: commands.register_one_shot_system(trigger_fade_in_cars),
+            fade_in_seed_chooser: commands.register_one_shot_system(trigger_fade_in_seed_chooser),
+            fade_out_seed_chooser: commands.register_one_shot_system(trigger_fade_out_seed_chooser),
             show_level_progress: commands.register_one_shot_system(trigger_show_level_progress),
             text_ready: commands.register_one_shot_system(trigger_text_ready),
             text_set: commands.register_one_shot_system(trigger_text_set),
@@ -137,6 +144,8 @@ pub(crate) fn update_timer(
             GameTimerTag::FadeInSeedBank => timer_trigger.fade_in_seed_bank,
             GameTimerTag::FadeInConveyerBelt => timer_trigger.fade_in_conveyer_belt,
             GameTimerTag::FadeInCars => timer_trigger.fade_in_cars,
+            GameTimerTag::FadeInSeedChooser => timer_trigger.fade_in_seed_chooser,
+            GameTimerTag::FadeOutSeedChooser => timer_trigger.fade_out_seed_chooser,
             GameTimerTag::ShowLevelProgress => timer_trigger.show_level_progress,
             GameTimerTag::TextReady => timer_trigger.text_ready,
             GameTimerTag::TextSet => timer_trigger.text_set,
@@ -196,11 +205,11 @@ fn trigger_fade_in_seed_bank(
     let mut clips = Vec::new();
     for (entity, mut visibility, transform) in &mut seedbank {
         // 防止多次fadein
-        if matches!(*visibility, Visibility::Visible) {
+        if matches!(*visibility, Visibility::Inherited) {
             continue;
         }
 
-        *visibility = Visibility::Visible;
+        *visibility = Visibility::Inherited;
         clips.push(AnimationClip {
             entity,
             keyframes: vec![
@@ -239,7 +248,7 @@ fn trigger_fade_in_cars(
 ) {
     let mut clips = Vec::new();
     for (entity, mut visiblity, car) in &mut cars {
-        *visiblity = Visibility::Visible;
+        *visiblity = Visibility::Inherited;
         let y = car.lane as f32 * 100.0 - 100.0 * 2.;
 
         clips.push(AnimationClip {
@@ -258,6 +267,80 @@ fn trigger_fade_in_cars(
                 KeyFrame {
                     time: Duration::from_secs_f32(0.15 * car.lane as f32 + 0.15),
                     transform: Some(Transform::from_xyz(-410.0, y, 10.0)),
+                    ..Default::default()
+                },
+            ],
+        });
+    }
+
+    commands.spawn((
+        AnimationBundle {
+            animation_clips: AnimationClips(clips),
+            ..Default::default()
+        },
+        SceneTag,
+    ));
+}
+
+fn trigger_fade_in_seed_chooser(
+    mut commands: Commands,
+    mut seed_chooser: Query<(Entity, &mut Visibility, &Transform), With<SeedChooserTag>>,
+) {
+    let mut clips = Vec::new();
+    for (entity, mut visibility, transform) in &mut seed_chooser {
+        *visibility = Visibility::Inherited;
+        clips.push(AnimationClip {
+            entity,
+            keyframes: vec![
+                KeyFrame {
+                    time: Duration::ZERO,
+                    transform: Some(Transform::from_xyz(
+                        transform.translation.x,
+                        transform.translation.y - 600.,
+                        transform.translation.z,
+                    )),
+                    ..Default::default()
+                },
+                KeyFrame {
+                    time: Duration::from_secs_f32(0.2),
+                    transform: Some(*transform),
+                    ..Default::default()
+                },
+            ],
+        });
+    }
+
+    commands.spawn((
+        AnimationBundle {
+            animation_clips: AnimationClips(clips),
+            ..Default::default()
+        },
+        SceneTag,
+    ));
+}
+
+fn trigger_fade_out_seed_chooser(
+    mut commands: Commands,
+    mut seed_chooser: Query<(Entity, &mut Visibility, &Transform), With<SeedChooserTag>>,
+) {
+    let mut clips = Vec::new();
+    for (entity, mut visibility, transform) in &mut seed_chooser {
+        *visibility = Visibility::Inherited;
+        clips.push(AnimationClip {
+            entity,
+            keyframes: vec![
+                KeyFrame {
+                    time: Duration::ZERO,
+                    transform: Some(*transform),
+                    ..Default::default()
+                },
+                KeyFrame {
+                    time: Duration::from_secs_f32(0.2),
+                    transform: Some(Transform::from_xyz(
+                        transform.translation.x,
+                        transform.translation.y - 600.,
+                        transform.translation.z,
+                    )),
                     ..Default::default()
                 },
             ],
@@ -1271,7 +1354,7 @@ pub(crate) fn update_projectile_show(
         }
 
         // 显示
-        *visibility = Visibility::Visible;
+        *visibility = Visibility::Inherited;
 
         // 音效
         spawn_se(
@@ -2440,4 +2523,224 @@ pub(crate) fn update_material_alpha(
 
         *material = materials.add(Color::srgba(1.0, 1.0, 1.0, *alpha));
     }
+}
+
+// 跟随相机
+pub(crate) fn update_follow_camera(
+    camera: Query<&GlobalTransform, With<Camera>>,
+    mut targets: Query<&mut Transform, With<FollowCameraTag>>,
+) {
+    let Some(transform) = camera.iter().next() else {
+        return;
+    };
+    let translation = transform.translation();
+
+    targets.par_iter_mut().for_each(|mut transform| {
+        transform.translation = translation;
+    });
+}
+
+// 更新开始按钮有效性
+pub(crate) fn update_start_button_enabled(
+    mut button: Query<&mut ButtonEnabled, (With<Button>, With<StartGameButtonTag>)>,
+    userdata: Res<UserData>,
+    choose_seed: Query<(), (With<PlantSeed>, With<SeedbankTag>)>,
+) {
+    let enabled = choose_seed.iter().count() == userdata.plant_solt_count;
+
+    for mut disabled in &mut button {
+        *disabled = match enabled {
+            true => ButtonEnabled::Enabled,
+            false => ButtonEnabled::Disabled,
+        };
+    }
+}
+
+// 选卡
+pub(crate) fn input_select_seed(
+    mut commands: Commands,
+    choose_seed: Query<(), (With<PlantSeed>, With<SeedbankTag>)>,
+    mouse_button_input: Res<ButtonInput<MouseButton>>,
+    hover_chooseable_seed: Query<
+        (Entity, &SeedTransformInChooserBox, &SeedHover),
+        With<ChooseableSeedTag>,
+    >,
+    userdata: Res<UserData>,
+) {
+    // 左键点击
+    if !mouse_button_input.just_pressed(MouseButton::Left) {
+        return;
+    }
+
+    // 鼠标指向的种子
+    let Some((pick_seed, SeedTransformInChooserBox(box_transform), _)) = hover_chooseable_seed
+        .iter()
+        .find(|(_, _, hover)| matches!(hover, SeedHover::Hover))
+    else {
+        return;
+    };
+
+    // 已选择的数量
+    let choose_count = choose_seed.iter().count();
+
+    // 判断是否超过可选择的数量
+    if choose_count >= userdata.plant_solt_count {
+        return;
+    }
+
+    // 标签更新
+    commands
+        .entity(pick_seed)
+        .remove::<(ChooseableSeedTag, SeedChooserTag)>()
+        .insert(SeedbankTag);
+
+    // 动画移动
+    commands.spawn((
+        AnimationBundle {
+            animation_clips: AnimationClips(vec![AnimationClip {
+                entity: pick_seed,
+                keyframes: vec![
+                    KeyFrame {
+                        time: Duration::ZERO,
+                        transform: Some(*box_transform),
+                        ..Default::default()
+                    },
+                    KeyFrame {
+                        time: Duration::from_secs_f32(0.1),
+                        transform: Some(Transform::from_translation(Vec3 {
+                            x: 85.0 + 55.0 * choose_count as f32 + 55.0 * 0.5 - 400.0,
+                            y: -8.0 - 35.0 + 300.0,
+                            z: 1.9,
+                        })),
+                        ..Default::default()
+                    },
+                ],
+            }]),
+            ..Default::default()
+        },
+        SceneTag,
+    ));
+}
+
+// 放弃选择的卡
+#[allow(clippy::type_complexity)]
+pub(crate) fn input_giveup_seed(
+    mut commands: Commands,
+    choose_seed: Query<
+        (Entity, &SeedTransformInChooserBox, &Transform, &SeedHover),
+        (With<PlantSeed>, With<SeedbankTag>),
+    >,
+    mouse_button_input: Res<ButtonInput<MouseButton>>,
+) {
+    // 左键点击
+    if !mouse_button_input.just_pressed(MouseButton::Left) {
+        return;
+    }
+
+    // 鼠标指向的种子
+    let Some((pick_seed, SeedTransformInChooserBox(box_transform), pick_transform, _)) =
+        choose_seed
+            .iter()
+            .find(|(_, _, _, hover)| matches!(hover, SeedHover::Hover))
+    else {
+        return;
+    };
+
+    // 标签更新
+    commands
+        .entity(pick_seed)
+        .remove::<SeedbankTag>()
+        .insert((ChooseableSeedTag, SeedChooserTag));
+
+    // 动画移动
+    let mut clips = Vec::new();
+    clips.push(AnimationClip {
+        entity: pick_seed,
+        keyframes: vec![
+            KeyFrame {
+                time: Duration::ZERO,
+                transform: Some(*pick_transform),
+                ..Default::default()
+            },
+            KeyFrame {
+                time: Duration::from_secs_f32(0.1),
+                transform: Some(*box_transform),
+                ..Default::default()
+            },
+        ],
+    });
+
+    // 已选择的种子左移
+    for (entity, _, transform, _) in &choose_seed {
+        if entity == pick_seed {
+            continue;
+        }
+        if transform.translation.x < pick_transform.translation.x {
+            continue;
+        }
+
+        clips.push(AnimationClip {
+            entity,
+            keyframes: vec![
+                KeyFrame {
+                    time: Duration::ZERO,
+                    transform: Some(*transform),
+                    ..Default::default()
+                },
+                KeyFrame {
+                    time: Duration::from_secs_f32(0.1),
+                    transform: Some(Transform::from_xyz(
+                        transform.translation.x - 55.0,
+                        transform.translation.y,
+                        transform.translation.z,
+                    )),
+                    ..Default::default()
+                },
+            ],
+        });
+    }
+
+    // 生成动画
+    commands.spawn((
+        AnimationBundle {
+            animation_clips: AnimationClips(clips),
+            ..Default::default()
+        },
+        SceneTag,
+    ));
+}
+
+pub(crate) fn start_game_button(
+    mut commands: Commands,
+    mut button: Query<(&ButtonInteraction, &mut ButtonEnabled), With<StartGameButtonTag>>,
+    choose_seed: Query<(), (With<PlantSeed>, With<SeedbankTag>)>,
+    userdata: Res<UserData>,
+) {
+    // 点击触发
+    let Some((interaction, mut enabled)) = button.iter_mut().next() else {
+        return;
+    };
+    if !matches!(interaction, ButtonInteraction::Click) {
+        return;
+    }
+
+    // 选择足够的卡
+    if choose_seed.iter().count() != userdata.plant_solt_count {
+        return;
+    }
+
+    // 立即禁用按钮，防止下一帧再次触发点击
+    *enabled = ButtonEnabled::Disabled;
+
+    // 开始游戏
+    commands.spawn((
+        GameTimer(Timer::from_seconds(0.0, TimerMode::Once)),
+        GameTimerTag::FadeOutSeedChooser,
+        SceneTag,
+    ));
+    commands.spawn((
+        GameTimer(Timer::from_seconds(0.5, TimerMode::Once)),
+        GameTimerTag::EnterState(GameState::Enter),
+        SceneTag,
+    ));
 }

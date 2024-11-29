@@ -45,6 +45,7 @@ impl Plugin for SceneGamePlugin {
                     setup::setup_plant_solt,
                     setup::setup_zombie_solt,
                     setup::setup_seedbank,
+                    setup::setup_seed_chooser,
                     setup::setup_cleanup_car,
                     setup::setup_standby_zombie,
                     setup::setup_resources,
@@ -56,7 +57,14 @@ impl Plugin for SceneGamePlugin {
                 )
                     .chain(),
             )
-            .add_systems(OnEnter(GameState::Enter), setup::setup_enter_timer)
+            .add_systems(
+                OnEnter(GameState::ChooseSeed),
+                setup::setup_choose_seed_timer,
+            )
+            .add_systems(
+                OnEnter(GameState::Enter),
+                (setup::setup_enter_timer, setup::insert_seed_pickable_tag),
+            )
             .add_systems(
                 OnEnter(GameState::Main),
                 (
@@ -96,7 +104,16 @@ impl Plugin for SceneGamePlugin {
                         update::update_alpha_color,
                         update::update_image_cut,
                         update::update_material_alpha,
+                        update::update_follow_camera,
                     ),
+                    // 选卡逻辑
+                    (
+                        update::update_start_button_enabled,
+                        update::input_select_seed,
+                        update::input_giveup_seed,
+                        update::start_game_button,
+                    )
+                        .run_if(in_state(GameState::ChooseSeed)),
                     // 游戏主逻辑
                     (
                         // 输入逻辑

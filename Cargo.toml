@@ -4,7 +4,7 @@ members = [
   "bin/bin_windows",
   "consts",
   "fw/fw_actor",
-  "fw/fw_anim",
+  "fw/fw_anim", "fw/fw_button",
   "fw/fw_cursor",
   "fw/fw_ftxm",
   "mod/mod_plant",

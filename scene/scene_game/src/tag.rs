@@ -26,6 +26,9 @@ pub(crate) enum GameTimerTag {
 
     // 植物包
     FadeInSeedBank,
+    // 选植物
+    FadeInSeedChooser,
+    FadeOutSeedChooser,
     // 传送带
     FadeInConveyerBelt,
     // 车
@@ -83,6 +86,10 @@ pub(crate) struct ColorAlphaFade;
 // 顶部种子栏标记
 #[derive(Component)]
 pub(crate) struct SeedbankTag;
+
+// 选卡栏
+#[derive(Component)]
+pub(crate) struct SeedChooserTag;
 
 // 可以捡起来种的种子
 #[derive(Component)]
@@ -302,7 +309,21 @@ pub(crate) struct RewardTag;
 #[derive(Component)]
 pub(crate) struct MaterialColorAnim;
 
-//
+// 跟随相机
+#[derive(Component)]
+pub(crate) struct FollowCameraTag;
+
+// 开始游戏按钮
+#[derive(Component)]
+pub(crate) struct StartGameButtonTag;
+
+// 可以进行选择的种子
+#[derive(Component)]
+pub(crate) struct ChooseableSeedTag;
+
+// 种子（在选择器里的）变换信息，用于复原
+#[derive(Component)]
+pub(crate) struct SeedTransformInChooserBox(pub Transform);
 
 impl PlantSolt {
     // 按默认僵尸啃食顺序返回植物

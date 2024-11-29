@@ -6,6 +6,7 @@ version = "0.1.0"
 [dependencies]
 fw_actor = {path = "../fw/fw_actor"}
 fw_anim = {path = "../fw/fw_anim"}
+fw_button = {path = "../fw/fw_button"}
 fw_cursor = {path = "../fw/fw_cursor"}
 fw_ftxm = {path = "../fw/fw_ftxm"}
 mod_plant = {path = "../mod/mod_plant"}
