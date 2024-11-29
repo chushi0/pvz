@@ -55,6 +55,9 @@ pub enum SeedHover {
 #[derive(Component)]
 pub struct AnimPlantShootTag;
 
+#[derive(Component)]
+pub struct AnimPlantProduceTag;
+
 #[derive(Bundle)]
 pub struct PlantSeedBundle {
     // 植物类型

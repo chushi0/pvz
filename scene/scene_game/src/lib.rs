@@ -134,6 +134,7 @@ impl Plugin for SceneGamePlugin {
                         (
                             update::update_plant_shoot_enable,
                             update::plant_shoot,
+                            update::plant_product,
                             update::update_projectile_show,
                             update::update_plant_die,
                             update::update_zombie_eat,

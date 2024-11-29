@@ -14,11 +14,12 @@ use fw_cursor::CursorPosition;
 use fw_ftxm::FtxmAudioSink;
 use mod_plant::{
     components::{
-        AnimPlantShootTag, PlantBundle, PlantCooldown, PlantHp, PlantMetaData, PlantSeed,
-        PlantSeedBundle, PlantUsable, SeedHover,
+        AnimPlantProduceTag, AnimPlantShootTag, PlantBundle, PlantCooldown, PlantHp, PlantMetaData,
+        PlantSeed, PlantSeedBundle, PlantUsable, SeedHover,
     },
     metadata::{
         PlantDetect, PlantPosition, PlantRegistry, PlantType, ProjectileTrack, ProjectileType,
+        ResourceType,
     },
 };
 use mod_userdata::UserData;
@@ -36,14 +37,14 @@ use scene_res_game::{Background, GameSceneSettings, Reward, SodType, WaveType};
 use crate::{
     resource::ZombieWaveController,
     tag::{
-        BootCleanerCar, ChooseableSeedTag, CleanerCar, ColorAlphaFade, DelayShowProjectile,
-        FollowCameraTag, FollowCursorTag, Freeze, GameTimer, GameTimerTag, GameUiTag, ImageCutAnim,
-        InvincibleTag, LanePosition, LevelProgressFlagTag, LevelProgressHeadTag,
-        LevelProgressProgressTag, MaterialColorAnim, MoveAcceleration, MoveTimer, MoveVelocity,
-        NaturalSunshineSolt, PickSeed, PickableSeed, PlantShootTag, PlantSolt, PlantTag,
-        ProjectileCooldown, ProjectileTag, RewardSolt, RewardTag, SceneTag, SeedChooserTag,
-        SeedTransformInChooserBox, SeedbankTag, ShowLevelProgressShiftLeft, SoltType,
-        StartGameButtonTag, SunshineTag, SunshineText, ToDespawn, ToSpawnZombie,
+        BootCleanerCar, ChooseableSeedTag, CleanerCar, ColorAlphaFade, DelayShow, FollowCameraTag,
+        FollowCursorTag, Freeze, GameTimer, GameTimerTag, GameUiTag, ImageCutAnim, InvincibleTag,
+        LanePosition, LevelProgressFlagTag, LevelProgressHeadTag, LevelProgressProgressTag,
+        MaterialColorAnim, MoveAcceleration, MoveTimer, MoveVelocity, NaturalSunshineSolt,
+        NaturalSunshineTag, PickSeed, PickableSeed, PlantProduceTag, PlantShootTag, PlantSolt,
+        PlantTag, ProjectileCooldown, ProjectileTag, RewardSolt, RewardTag, SceneTag,
+        SeedChooserTag, SeedTransformInChooserBox, SeedbankTag, ShowLevelProgressShiftLeft,
+        SoltType, StartGameButtonTag, SunshineTag, SunshineText, ToDespawn, ToSpawnZombie,
         ZombieAttackableTag, ZombieCriticalTag, ZombieEatTag, ZombieHpAnim, ZombieSolt, ZombieTag,
     },
     GameState, Sunshine,
@@ -54,7 +55,6 @@ pub(crate) struct UpdateTimerSystem {
     move_camera_to_center: SystemId,
     move_camera_to_left: SystemId,
     fade_in_seed_bank: SystemId,
-    fade_in_conveyer_belt: SystemId,
     fade_in_cars: SystemId,
     fade_in_seed_chooser: SystemId,
     fade_out_seed_chooser: SystemId,
@@ -94,7 +94,6 @@ pub(crate) fn update_timer(
             move_camera_to_center: commands.register_one_shot_system(trigger_move_camera_to_center),
             move_camera_to_left: commands.register_one_shot_system(trigger_move_camera_to_left),
             fade_in_seed_bank: commands.register_one_shot_system(trigger_fade_in_seed_bank),
-            fade_in_conveyer_belt: commands.register_one_shot_system(trigger_fade_in_conveyer_belt),
             fade_in_cars: commands.register_one_shot_system(trigger_fade_in_cars),
             fade_in_seed_chooser: commands.register_one_shot_system(trigger_fade_in_seed_chooser),
             fade_out_seed_chooser: commands.register_one_shot_system(trigger_fade_out_seed_chooser),
@@ -142,7 +141,6 @@ pub(crate) fn update_timer(
             GameTimerTag::CameraToCenterAnim => timer_trigger.move_camera_to_center,
             GameTimerTag::CameraToLeftAnim => timer_trigger.move_camera_to_left,
             GameTimerTag::FadeInSeedBank => timer_trigger.fade_in_seed_bank,
-            GameTimerTag::FadeInConveyerBelt => timer_trigger.fade_in_conveyer_belt,
             GameTimerTag::FadeInCars => timer_trigger.fade_in_cars,
             GameTimerTag::FadeInSeedChooser => timer_trigger.fade_in_seed_chooser,
             GameTimerTag::FadeOutSeedChooser => timer_trigger.fade_out_seed_chooser,
@@ -239,8 +237,6 @@ fn trigger_fade_in_seed_bank(
         SceneTag,
     ));
 }
-
-fn trigger_fade_in_conveyer_belt() {}
 
 fn trigger_fade_in_cars(
     mut commands: Commands,
@@ -1210,6 +1206,7 @@ pub(crate) fn plant_seed(
             x: solt_translation.x,
         },
     ));
+    // 植物射击标记
     if let Some(shoot) = &plant_info.shoot {
         plant_entity.insert((
             ProjectileCooldown {
@@ -1218,6 +1215,14 @@ pub(crate) fn plant_seed(
             },
             PlantShootTag::Standby,
         ));
+    }
+    // 植物生产标记
+    if let Some(produce) = &plant_info.produce {
+        plant_entity.insert(PlantProduceTag {
+            cooldown: produce.cooldown + thread_rng().gen_range(0.0..produce.cooldown_spread)
+                - produce.cooldown_spread / 2.0,
+            elaspse: 0.0,
+        });
     }
     *solt_position = Some(plant_entity.id());
 
@@ -1318,10 +1323,15 @@ pub(crate) fn plant_shoot(
                 SceneTag,
                 ProjectileTag,
                 Freeze,
-                DelayShowProjectile {
+                DelayShow {
                     timer: Timer::new(
                         Duration::from_secs_f32(projectile.shoot_timing),
                         TimerMode::Once,
+                    ),
+                    se: Some(
+                        *["sounds/throw.ogg", "sounds/throw2.ogg"]
+                            .choose(&mut thread_rng())
+                            .unwrap(),
                     ),
                 },
             ));
@@ -1338,12 +1348,12 @@ pub(crate) fn plant_shoot(
     }
 }
 
-// 投掷物延迟展示
+// 延迟展示
 pub(crate) fn update_projectile_show(
     mut commands: Commands,
     time: Res<Time>,
     asset_server: Res<AssetServer>,
-    mut projectile: Query<(Entity, &mut DelayShowProjectile, &mut Visibility)>,
+    mut projectile: Query<(Entity, &mut DelayShow, &mut Visibility)>,
 ) {
     let delta = time.delta();
     for (entity, mut config, mut visibility) in &mut projectile {
@@ -1357,18 +1367,12 @@ pub(crate) fn update_projectile_show(
         *visibility = Visibility::Inherited;
 
         // 音效
-        spawn_se(
-            &mut commands,
-            &asset_server,
-            ["sounds/throw.ogg", "sounds/throw2.ogg"]
-                .choose(&mut thread_rng())
-                .unwrap(),
-        );
+        if let Some(se) = config.se {
+            spawn_se(&mut commands, &asset_server, se);
+        }
 
         // 标签更新
-        commands
-            .entity(entity)
-            .remove::<(Freeze, DelayShowProjectile)>();
+        commands.entity(entity).remove::<(Freeze, DelayShow)>();
     }
 }
 
@@ -2202,7 +2206,7 @@ pub(crate) fn check_plant_seed_usable(
 // 更新阳光逻辑
 pub(crate) fn update_sunshine(
     time: Res<Time>,
-    mut sunshine: Query<(&SunshineTag, &mut Transform)>,
+    mut sunshine: Query<(&NaturalSunshineTag, &mut Transform)>,
 ) {
     sunshine
         .par_iter_mut()
@@ -2252,10 +2256,10 @@ pub(crate) fn update_natural_sunshine(
                 transform: Transform::from_xyz(rng.gen_range(-350.0..350.0), 300.0, 30.0),
                 ..Default::default()
             },
-            SunshineTag {
+            NaturalSunshineTag {
                 target_y: rng.gen_range(-200.0..200.0),
-                count: 25,
             },
+            SunshineTag { count: 25 },
             SceneTag,
             AnimStandbyTag,
             ToDespawn(Timer::new(Duration::from_secs_f32(30.), TimerMode::Once)),
@@ -2310,7 +2314,7 @@ pub(crate) fn collect_sunshine(
     let target_transform = Transform::from_xyz(-370. + 40., 300. - 35., transform.translation.z);
     commands
         .entity(sunshine_entity)
-        .remove::<(SunshineTag, ToDespawn)>()
+        .remove::<(NaturalSunshineTag, ToDespawn)>()
         .insert(AnimationBundle {
             animation_clips: AnimationClips(vec![AnimationClip {
                 entity: sunshine_entity,
@@ -2796,5 +2800,102 @@ pub(crate) fn check_remove_movement(
         commands
             .entity(entity)
             .remove::<(MoveVelocity, MoveAcceleration, MoveTimer)>();
+    }
+}
+
+// 植物生产
+pub(crate) fn plant_product(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut plants: Query<(Entity, &mut PlantProduceTag, &PlantTag, &GlobalTransform)>,
+    asset_server: Res<AssetServer>,
+    mut skeletions: ResMut<Assets<SkeletonData>>,
+) {
+    let delta = time.delta().as_secs_f32();
+    let mut rng = thread_rng();
+    for (entity, mut produce, PlantTag { metadata, .. }, transform) in &mut plants {
+        // 生产配置
+        let Some(config) = &metadata.produce else {
+            return;
+        };
+
+        // 生产冷却
+        produce.elaspse += delta;
+        produce.cooldown -= delta;
+        if produce.cooldown > 0.0 {
+            continue;
+        }
+        produce.cooldown = config.cooldown + rng.gen_range(0.0..config.cooldown_spread)
+            - config.cooldown_spread / 2.0;
+
+        // 播放生产动画
+        commands.entity(entity).insert(AnimPlantProduceTag);
+
+        // 生成资源
+        for product in &config.products {
+            // 是否在生成资源的时间内
+            if produce.elaspse < product.delay && produce.elaspse > product.max_times {
+                continue;
+            }
+
+            // 生成资源位置
+            let origin = transform.translation();
+            let start_position = Vec2 {
+                x: origin.x + product.offset_x,
+                y: origin.y + product.offset_y,
+            };
+            let end_position = start_position
+                + Vec2 {
+                    x: rng.gen_range(-50.0..50.0),
+                    y: rng.gen_range(-50.0..50.0),
+                };
+
+            // 初始速度
+            let initial_velocity =
+                calculate_throw_initial_velocity(start_position, end_position, -1000.0, 1.0);
+
+            // 生成资源
+            debug!("summon resource: {:?}", product.resource_type);
+            let mut resource_entity = commands.spawn((
+                SceneTag,
+                AnimStandbyTag,
+                MoveVelocity(initial_velocity),
+                MoveAcceleration(Vec2 { x: 0.0, y: -1000.0 }),
+                MoveTimer(Timer::new(
+                    Duration::from_secs_f32(product.timing + 1.0),
+                    TimerMode::Once,
+                )),
+                ToDespawn(Timer::new(
+                    Duration::from_secs_f32(product.timing + 30.),
+                    TimerMode::Once,
+                )),
+                DelayShow {
+                    timer: Timer::new(Duration::from_secs_f32(product.timing), TimerMode::Once),
+                    se: None,
+                },
+                Freeze,
+            ));
+            match product.resource_type {
+                ResourceType::Sunshine => {
+                    let skeleton = skeletions.add(SkeletonData::new_from_binary(
+                        asset_server.load("reanim-spine/sun.skel"),
+                        asset_server.load("reanim-spine/sun.atlas"),
+                    ));
+                    resource_entity.insert((
+                        SpineBundle {
+                            skeleton,
+                            transform: Transform::from_xyz(
+                                start_position.x,
+                                start_position.y,
+                                30.0,
+                            ),
+                            visibility: Visibility::Hidden,
+                            ..Default::default()
+                        },
+                        SunshineTag { count: 25 },
+                    ));
+                }
+            }
+        }
     }
 }

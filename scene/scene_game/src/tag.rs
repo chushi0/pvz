@@ -29,8 +29,6 @@ pub(crate) enum GameTimerTag {
     // 选植物
     FadeInSeedChooser,
     FadeOutSeedChooser,
-    // 传送带
-    FadeInConveyerBelt,
     // 车
     FadeInCars,
     // 游戏进程进度条
@@ -192,6 +190,15 @@ pub(crate) struct ProjectileCooldown {
     pub max_cooldown: f32,
 }
 
+// 生产控制
+#[derive(Component)]
+pub(crate) struct PlantProduceTag {
+    // 冷却
+    pub cooldown: f32,
+    // 总时间
+    pub elaspse: f32,
+}
+
 // 植物是否要进行攻击（是否侦测到攻击范围内有敌人）
 #[derive(Component)]
 pub(crate) enum PlantShootTag {
@@ -215,10 +222,11 @@ pub(crate) struct MoveAcceleration(pub Vec2);
 #[derive(Component)]
 pub(crate) struct Freeze;
 
-// 投掷物延迟入场，在计时结束后解除Freeze和DelayShow
+// 延迟入场，在计时结束后解除Freeze和DelayShow
 #[derive(Component)]
-pub(crate) struct DelayShowProjectile {
+pub(crate) struct DelayShow {
     pub timer: Timer,
+    pub se: Option<&'static str>,
 }
 
 // 僵尸标记
@@ -280,10 +288,15 @@ pub(crate) struct ToSpawnZombie {
     pub zombie_solt: Entity,
 }
 
+// 自然阳光
+#[derive(Component)]
+pub(crate) struct NaturalSunshineTag {
+    pub target_y: f32,
+}
+
 // 阳光
 #[derive(Component)]
 pub(crate) struct SunshineTag {
-    pub target_y: f32,
     pub count: u32,
 }
 

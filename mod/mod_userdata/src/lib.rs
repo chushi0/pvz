@@ -18,7 +18,9 @@ pub struct UserData {
 impl Default for UserData {
     fn default() -> Self {
         Self {
-            unlock_plugins: [PlantType::PeaShooter].into_iter().collect(),
+            unlock_plugins: [PlantType::PeaShooter, PlantType::Sunflower]
+                .into_iter()
+                .collect(),
             plant_solt_count: 6,
         }
     }

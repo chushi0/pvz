@@ -37,5 +37,15 @@
             <Atlas>reanim-spine/sunflower.atlas</Atlas>
             <Skeleton>reanim-spine/sunflower.skel</Skeleton>
         </Render>
+        <Produce>
+            <Cooldown>15</Cooldown>
+            <CooldownSpread>10</CooldownSpread>
+            <Product>
+                <Resource>Sunshine</Resource>
+                <Timing>1.0</Timing>
+                <OffsetX>-6.347</OffsetX>
+                <OffsetY>48.632</OffsetY>
+            </Product>
+        </Produce>
     </Plant>
 </Plants>

@@ -1,3 +1,4 @@
+use core::f32;
 use std::{ops::Deref, sync::Arc};
 
 use bevy::{prelude::*, utils::HashMap};
@@ -142,6 +143,8 @@ pub struct PlantInfo {
     pub plant_on: PlantOn,
     #[serde(rename = "Shoot")]
     pub shoot: Option<PlantShoot>,
+    #[serde(rename = "Produce")]
+    pub produce: Option<PlantProduce>,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -198,6 +201,42 @@ pub struct PlantShoot {
     pub shoot_cooldown: f32,
     #[serde(rename = "Projectile")]
     pub projectiles: Vec<ShootProjectile>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PlantProduce {
+    #[serde(rename = "Cooldown")]
+    pub cooldown: f32,
+    #[serde(rename = "CooldownSpread")]
+    #[serde(default)]
+    pub cooldown_spread: f32,
+    #[serde(rename = "Product")]
+    pub products: Vec<PlantProduct>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PlantProduct {
+    #[serde(rename = "Resource")]
+    pub resource_type: ResourceType,
+    #[serde(rename = "Times")]
+    #[serde(default = "f32_infinity")]
+    pub max_times: f32,
+    #[serde(rename = "Delay")]
+    #[serde(default)]
+    pub delay: f32,
+    #[serde(rename = "Timing")]
+    pub timing: f32,
+    #[serde(rename = "OffsetX")]
+    #[serde(default)]
+    pub offset_x: f32,
+    #[serde(rename = "OffsetY")]
+    #[serde(default)]
+    pub offset_y: f32,
+}
+
+#[derive(Debug, Deserialize)]
+pub enum ResourceType {
+    Sunshine,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -272,4 +311,8 @@ const fn default_true() -> bool {
 
 const fn default_false() -> bool {
     false
+}
+
+const fn f32_infinity() -> f32 {
+    f32::INFINITY
 }
