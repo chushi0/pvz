@@ -6,7 +6,7 @@
             豌豆射手，你的第一道防线。它们通过发射豌豆来攻击僵尸。
         </Description>
         <Sunshine>100</Sunshine>
-        <Cooldown>5</Cooldown>
+        <Cooldown>15</Cooldown>
         <Hp>200</Hp>
         <Render>
             <Atlas>reanim-spine/pea_shooter.atlas</Atlas>
@@ -31,7 +31,7 @@
             为你提供额外的阳光。
         </Description>
         <Sunshine>50</Sunshine>
-        <Cooldown>5</Cooldown>
+        <Cooldown>15</Cooldown>
         <Hp>200</Hp>
         <Render>
             <Atlas>reanim-spine/sunflower.atlas</Atlas>
@@ -47,5 +47,17 @@
                 <OffsetY>48.632</OffsetY>
             </Product>
         </Produce>
+    </Plant>
+    <Plant id="CherryBomb">
+        <Name>樱桃炸弹</Name>
+        <Description>立即爆炸，并对周围僵尸造成大量伤害。</Description>
+        <Sunshine>150</Sunshine>
+        <Cooldown>60</Cooldown>
+        <Hp>200</Hp>
+        <Render>
+            <Atlas>reanim-spine/cherry_bomb.atlas</Atlas>
+            <Skeleton>reanim-spine/cherry_bomb.skel</Skeleton>
+        </Render>
+        <Instant>CherryBomb</Instant>
     </Plant>
 </Plants>

@@ -5,4 +5,6 @@ version = "0.1.0"
 
 [dependencies]
 bevy = "0.14.2"
+mod_level = {path = "../../mod/mod_level"}
+mod_userdata = {path = "../../mod/mod_userdata"}
 scene_base = {path = "../scene_base"}

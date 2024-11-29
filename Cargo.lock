@@ -183,12 +183,12 @@ dependencies = [
  "fw_button",
  "fw_cursor",
  "fw_ftxm",
+ "mod_level",
  "mod_plant",
  "mod_userdata",
  "mod_zombie",
  "scene_base",
  "scene_game",
- "scene_res_game",
  "scene_title",
  "zune-jpeg 0.5.0-rc2",
 ]
@@ -2532,6 +2532,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e53debba6bda7a793e5f99b8dacf19e626084f525f7829104ba9898f367d85ff"
 
 [[package]]
+name = "mod_level"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "mod_plant",
+ "mod_zombie",
+ "serde",
+ "serde-xml-rs",
+]
+
+[[package]]
 name = "mod_plant"
 version = "0.1.0"
 dependencies = [
@@ -3461,21 +3472,12 @@ dependencies = [
  "fw_button",
  "fw_cursor",
  "fw_ftxm",
+ "mod_level",
  "mod_plant",
  "mod_userdata",
  "mod_zombie",
  "rand",
  "scene_base",
- "scene_res_game",
-]
-
-[[package]]
-name = "scene_res_game"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "mod_plant",
- "mod_zombie",
 ]
 
 [[package]]
@@ -3483,6 +3485,8 @@ name = "scene_title"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "mod_level",
+ "mod_userdata",
  "scene_base",
 ]
 

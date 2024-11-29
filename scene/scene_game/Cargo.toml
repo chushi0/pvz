@@ -10,11 +10,11 @@ fw_anim = {path = "../../fw/fw_anim"}
 fw_button = {path = "../../fw/fw_button"}
 fw_cursor = {path = "../../fw/fw_cursor"}
 fw_ftxm = {path = "../../fw/fw_ftxm"}
+mod_level = {path = "../../mod/mod_level"}
 mod_plant = {path = "../../mod/mod_plant"}
 mod_userdata = {path = "../../mod/mod_userdata"}
 mod_zombie = {path = "../../mod/mod_zombie"}
 scene_base = {path = "../scene_base"}
-scene_res_game = {path = "../../scene_res/scene_res_game"}
 
 bevy = "0.14.2"
 bevy_spatial = "0.9.1"

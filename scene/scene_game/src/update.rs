@@ -12,6 +12,7 @@ use fw_anim::{AnimationBundle, AnimationClip, AnimationClips, CustomAnimationTri
 use fw_button::components::{Button, ButtonEnabled, ButtonInteraction};
 use fw_cursor::CursorPosition;
 use fw_ftxm::FtxmAudioSink;
+use mod_level::{CurrentLevel, LevelBackground, LevelType, Reward, SodType, WaveType, Zombie};
 use mod_plant::{
     components::{
         AnimPlantProduceTag, AnimPlantShootTag, PlantBundle, PlantCooldown, PlantHp, PlantMetaData,
@@ -32,7 +33,6 @@ use mod_zombie::{
 };
 use rand::{seq::SliceRandom, thread_rng, Rng};
 use scene_base::GameScene;
-use scene_res_game::{Background, GameSceneSettings, Reward, SodType, WaveType};
 
 use crate::{
     resource::ZombieWaveController,
@@ -355,7 +355,7 @@ fn trigger_fade_out_seed_chooser(
 fn trigger_show_level_progress(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    settings: Res<GameSceneSettings>,
+    current_level: Res<CurrentLevel>,
     mut shift_left: Query<&mut Transform, With<ShowLevelProgressShiftLeft>>,
 ) {
     let meter = asset_server.load("images/FlagMeter.png");
@@ -400,8 +400,8 @@ fn trigger_show_level_progress(
     ));
 
     // 旗帜
-    let flag_count = settings
-        .zombie_waves
+    let flag_count = current_level
+        .waves
         .iter()
         .filter(|wave| matches!(wave.wave_type, WaveType::HugeWave))
         .count();
@@ -614,12 +614,12 @@ fn trigger_stop_bgm(mut commands: Commands, bgm: Query<Entity, With<FtxmAudioSin
 fn trigger_upgrade_sod(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    settings: Res<GameSceneSettings>,
+    current_level: Res<CurrentLevel>,
 ) {
-    let Background::Day {
+    let LevelBackground::Day {
         sod_type,
         upgrade_sod_type: _,
-    } = &settings.background
+    } = &current_level.background
     else {
         return;
     };
@@ -826,7 +826,28 @@ fn trigger_upgrade_sod(
     });
 }
 
-fn trigger_finish(mut next_screen: ResMut<NextState<GameScene>>) {
+fn trigger_finish(
+    mut next_screen: ResMut<NextState<GameScene>>,
+    mut userdata: ResMut<UserData>,
+    level: Res<CurrentLevel>,
+) {
+    // 获取奖励
+    match level.reward {
+        Some(Reward::Plant { plant }) => {
+            userdata.unlock_plugins.insert(plant);
+        }
+        None => {}
+    }
+
+    // 冒险模式？进度+1
+    if matches!(level.id, LevelType::Adventure { level: _ }) {
+        userdata.adventure_progress += 1;
+        if userdata.adventure_progress > 50 {
+            userdata.adventure_progress = 0;
+            userdata.pass_adventure_count += 1;
+        }
+    }
+
     // TODO: 游戏结束，切到其他画面
     next_screen.set(GameScene::Title);
 }
@@ -1754,7 +1775,7 @@ pub(crate) fn update_zombie_wave(
     mut commands: Commands,
     time: Res<Time>,
     mut zombie_wave_controller: ResMut<ZombieWaveController>,
-    settings: Res<GameSceneSettings>,
+    current_level: Res<CurrentLevel>,
     zombies: Query<
         (),
         Or<(
@@ -1765,7 +1786,7 @@ pub(crate) fn update_zombie_wave(
     zombie_registry: Res<ZombieRegistry>,
     zombie_solts: Query<(Entity, &ZombieSolt)>,
 ) {
-    if zombie_wave_controller.next_wave_index >= settings.zombie_waves.len() {
+    if zombie_wave_controller.next_wave_index >= current_level.waves.len() {
         return;
     }
 
@@ -1790,8 +1811,8 @@ pub(crate) fn update_zombie_wave(
 
     // 一大波僵尸正在接近！
     if !zombie_wave_controller.trigger_huge_wave
-        && settings
-            .zombie_waves
+        && current_level
+            .waves
             .get(zombie_wave_controller.next_wave_index)
             .map(|wave| matches!(wave.wave_type, WaveType::HugeWave))
             .unwrap_or(false)
@@ -1837,7 +1858,7 @@ pub(crate) fn update_zombie_wave(
     }
 
     // 最后一波
-    if zombie_wave_controller.next_wave_index == settings.zombie_waves.len() - 1 {
+    if zombie_wave_controller.next_wave_index == current_level.waves.len() - 1 {
         debug!("wave controller: final wave");
         commands.spawn((
             GameTimer(Timer::from_seconds(0.0, TimerMode::Once)),
@@ -1852,8 +1873,8 @@ pub(crate) fn update_zombie_wave(
     }
 
     // 波次数据
-    let Some(wave) = settings
-        .zombie_waves
+    let Some(wave) = current_level
+        .waves
         .get(zombie_wave_controller.next_wave_index)
     else {
         return;
@@ -1862,10 +1883,10 @@ pub(crate) fn update_zombie_wave(
     // 生成僵尸
     debug!("wave controller: summon zombies: {:?}", wave.zombies);
     let mut rng = thread_rng();
-    for (zombie_type, count) in &wave.zombies {
+    for Zombie { zombie, count } in &wave.zombies {
         for _ in 0..*count {
             // 僵尸信息
-            let zombie_info = zombie_registry.get(zombie_type).unwrap();
+            let zombie_info = zombie_registry.get(zombie).unwrap();
             // 所有可选择的生成点位
             let solts = zombie_solts
                 .iter()
@@ -1891,7 +1912,7 @@ pub(crate) fn update_zombie_wave(
             commands.spawn((
                 ToSpawnZombie {
                     timer: Timer::new(Duration::from_secs_f32(delay), TimerMode::Once),
-                    zombie_type: *zombie_type,
+                    zombie_type: *zombie,
                     zombie_solt: *entity,
                 },
                 SceneTag,
@@ -1909,14 +1930,14 @@ pub(crate) fn update_zombie_wave(
 
 // 更新关卡进度条
 pub(crate) fn update_level_progress(
-    settings: Res<GameSceneSettings>,
+    current_level: Res<CurrentLevel>,
     zombie_wave_controller: Res<ZombieWaveController>,
     mut level_progress: Query<&mut Sprite, With<LevelProgressProgressTag>>,
     time: Res<Time>,
 ) {
     // 旗帜数量
-    let flag_count = settings
-        .zombie_waves
+    let flag_count = current_level
+        .waves
         .iter()
         .filter(|wave| matches!(wave.wave_type, WaveType::HugeWave))
         .count()
@@ -1927,7 +1948,7 @@ pub(crate) fn update_level_progress(
     let huge_wave = {
         let mut count = 0;
         for i in 0..zombie_wave_controller.next_wave_index {
-            if matches!(settings.zombie_waves[i].wave_type, WaveType::HugeWave) {
+            if matches!(current_level.waves[i].wave_type, WaveType::HugeWave) {
                 count += 1;
             }
         }
@@ -1937,7 +1958,7 @@ pub(crate) fn update_level_progress(
         let mut count = 0;
         for i in 0..zombie_wave_controller.next_wave_index {
             let i = zombie_wave_controller.next_wave_index - i - 1;
-            if matches!(settings.zombie_waves[i].wave_type, WaveType::HugeWave) {
+            if matches!(current_level.waves[i].wave_type, WaveType::HugeWave) {
                 break;
             }
             count += 1;
@@ -1946,8 +1967,8 @@ pub(crate) fn update_level_progress(
     };
     let wave_before_huge = {
         let mut count = 0;
-        for i in zombie_wave_controller.next_wave_index..settings.zombie_waves.len() {
-            if matches!(settings.zombie_waves[i].wave_type, WaveType::HugeWave) {
+        for i in zombie_wave_controller.next_wave_index..current_level.waves.len() {
+            if matches!(current_level.waves[i].wave_type, WaveType::HugeWave) {
                 break;
             }
             count += 1;
@@ -1962,7 +1983,7 @@ pub(crate) fn update_level_progress(
     progress = progress.clamp(0., 158.);
 
     // special case: 没有huge wave时，最后一波展示会有问题，特殊处理下
-    if zombie_wave_controller.next_wave_index == settings.zombie_waves.len() {
+    if zombie_wave_controller.next_wave_index == current_level.waves.len() {
         progress = 158.;
     }
 
@@ -2314,7 +2335,7 @@ pub(crate) fn collect_sunshine(
     let target_transform = Transform::from_xyz(-370. + 40., 300. - 35., transform.translation.z);
     commands
         .entity(sunshine_entity)
-        .remove::<(NaturalSunshineTag, ToDespawn)>()
+        .remove::<(NaturalSunshineTag, SunshineTag, ToDespawn)>()
         .insert(AnimationBundle {
             animation_clips: AnimationClips(vec![AnimationClip {
                 entity: sunshine_entity,
@@ -2436,7 +2457,7 @@ pub(crate) fn check_summon_reward(
     mut commands: Commands,
     reward_solt: Query<(Entity, &GlobalTransform), With<RewardSolt>>,
     zombie_wave_controller: Res<ZombieWaveController>,
-    settings: Res<GameSceneSettings>,
+    current_level: Res<CurrentLevel>,
     zombies: Query<
         (),
         Or<(
@@ -2452,7 +2473,7 @@ pub(crate) fn check_summon_reward(
     };
 
     // 所有波次必须均已释放
-    if zombie_wave_controller.next_wave_index < settings.zombie_waves.len() {
+    if zombie_wave_controller.next_wave_index < current_level.waves.len() {
         return;
     }
 
@@ -2490,8 +2511,8 @@ pub(crate) fn check_summon_reward(
     );
 
     // 生成奖励
-    match settings.reward {
-        Reward::PlantSeed(plant_type) => commands
+    match current_level.reward {
+        Some(Reward::Plant { plant }) => commands
             .spawn((
                 PlantSeedBundle {
                     transform: Transform::from_translation(Vec3 {
@@ -2499,7 +2520,7 @@ pub(crate) fn check_summon_reward(
                         y: reward_start_translation.y,
                         z: 60.0,
                     }),
-                    ..PlantSeedBundle::new(plant_registry.get(&plant_type).unwrap().clone())
+                    ..PlantSeedBundle::new(plant_registry.get(&plant).unwrap().clone())
                 },
                 RewardTag,
                 SceneTag,
@@ -2508,7 +2529,7 @@ pub(crate) fn check_summon_reward(
                 MoveTimer(Timer::new(Duration::from_secs_f32(1.0), TimerMode::Once)),
             ))
             .id(),
-        Reward::MoneyBag => todo!(),
+        None => todo!(),
     };
 }
 

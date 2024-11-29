@@ -6,19 +6,21 @@ use bevy::{
     sprite::{Anchor, MaterialMesh2dBundle},
     text::Text2dBounds,
 };
-use bevy_spine::prelude::*;
 use fw_actor::components::AnimStandbyTag;
 use fw_anim::{AnimationBundle, AnimationClip, AnimationClips, CustomAnimationTrigger, KeyFrame};
 use fw_button::components::{ButtonBackground, ButtonBundle, ButtonHotspot};
 use fw_ftxm::{FtxmSource, MainMusicTable};
+use mod_level::{CurrentLevel, LevelBackground, SodType, Zombie};
 use mod_plant::{
     components::{PlantSeed, PlantSeedBundle, PlantUsable},
     metadata::{PlantRegistry, PlantType},
 };
 use mod_userdata::UserData;
-use mod_zombie::components::{AnimZombieEatTag, AnimZombieMoveTag};
+use mod_zombie::{
+    components::{AnimZombieEatTag, AnimZombieMoveTag, ZombieBundle},
+    metadata::ZombieRegistry,
+};
 use rand::{thread_rng, Rng};
-use scene_res_game::{Background, GameSceneSettings, SodType};
 
 use crate::{
     resource::{Sunshine, ZombieWaveController},
@@ -53,21 +55,21 @@ pub(crate) fn setup_camera(mut commands: Commands) {
 
 pub(crate) fn setup_background(
     mut commands: Commands,
-    settings: Res<GameSceneSettings>,
+    current_level: Res<CurrentLevel>,
     asset_server: Res<AssetServer>,
 ) {
     // 背景图
-    let image = asset_server.load(match settings.background {
-        Background::Day {
+    let image = asset_server.load(match current_level.background {
+        LevelBackground::Day {
             sod_type: SodType::SodRow5,
             ..
         } => "images/background1.jpg",
-        Background::Day { .. } => "images/background1unsodded.jpg",
-        Background::Night => "images/background2.jpg",
-        Background::Swim => "images/background3.jpg",
-        Background::SwimFog => "images/background4.jpg",
-        Background::Roof => "images/background5.jpg",
-        Background::RoofNight => "images/background6.jpg",
+        LevelBackground::Day { .. } => "images/background1unsodded.jpg",
+        LevelBackground::Night => "images/background2.jpg",
+        LevelBackground::Swim => "images/background3.jpg",
+        LevelBackground::SwimFog => "images/background4.jpg",
+        LevelBackground::Roof => "images/background5.jpg",
+        LevelBackground::RoofNight => "images/background6.jpg",
     });
     commands.spawn((
         SpriteBundle {
@@ -83,7 +85,7 @@ pub(crate) fn setup_background(
     ));
 
     // 白天无草皮之地
-    if let Background::Day { sod_type, .. } = &settings.background {
+    if let LevelBackground::Day { sod_type, .. } = &current_level.background {
         if let Some(image) = match sod_type {
             SodType::SodRow1 => Some("images/sod1row.png"),
             SodType::SodRow3 => Some("images/sod3row.png"),
@@ -109,9 +111,9 @@ pub(crate) fn setup_background(
     // TODO: 如果是泳池，需要处理河道
 }
 
-pub(crate) fn setup_plant_solt(mut commands: Commands, settings: Res<GameSceneSettings>) {
-    match &settings.background {
-        Background::Day {
+pub(crate) fn setup_plant_solt(mut commands: Commands, current_level: Res<CurrentLevel>) {
+    match &current_level.background {
+        LevelBackground::Day {
             sod_type,
             upgrade_sod_type,
         } => {
@@ -140,7 +142,7 @@ pub(crate) fn setup_plant_solt(mut commands: Commands, settings: Res<GameSceneSe
                 }
             });
         }
-        Background::Night => {
+        LevelBackground::Night => {
             for lane in 0..5 {
                 for i in 0..9 {
                     commands.spawn((
@@ -160,7 +162,7 @@ pub(crate) fn setup_plant_solt(mut commands: Commands, settings: Res<GameSceneSe
                 }
             }
         }
-        Background::Swim | Background::SwimFog => {
+        LevelBackground::Swim | LevelBackground::SwimFog => {
             for (lane, solt_type) in [
                 SoltType::Dirt,
                 SoltType::Dirt,
@@ -194,7 +196,7 @@ pub(crate) fn setup_plant_solt(mut commands: Commands, settings: Res<GameSceneSe
                 }
             }
         }
-        Background::Roof | Background::RoofNight => {
+        LevelBackground::Roof | LevelBackground::RoofNight => {
             for lane in 0..5 {
                 for i in 0..9 {
                     commands.spawn((
@@ -221,9 +223,9 @@ pub(crate) fn setup_plant_solt(mut commands: Commands, settings: Res<GameSceneSe
     }
 }
 
-pub(crate) fn setup_zombie_solt(mut commands: Commands, settings: Res<GameSceneSettings>) {
-    match &settings.background {
-        Background::Day {
+pub(crate) fn setup_zombie_solt(mut commands: Commands, current_level: Res<CurrentLevel>) {
+    match &current_level.background {
+        LevelBackground::Day {
             sod_type,
             upgrade_sod_type,
         } => {
@@ -248,7 +250,7 @@ pub(crate) fn setup_zombie_solt(mut commands: Commands, settings: Res<GameSceneS
                 ));
             });
         }
-        Background::Night => {
+        LevelBackground::Night => {
             for lane in 0..5 {
                 commands.spawn((
                     ZombieSolt {
@@ -264,7 +266,7 @@ pub(crate) fn setup_zombie_solt(mut commands: Commands, settings: Res<GameSceneS
                 ));
             }
         }
-        Background::Swim | Background::SwimFog => {
+        LevelBackground::Swim | LevelBackground::SwimFog => {
             for (lane, solt_type) in [
                 SoltType::Dirt,
                 SoltType::Dirt,
@@ -289,7 +291,7 @@ pub(crate) fn setup_zombie_solt(mut commands: Commands, settings: Res<GameSceneS
                 ));
             }
         }
-        Background::Roof | Background::RoofNight => {
+        LevelBackground::Roof | LevelBackground::RoofNight => {
             for lane in 0..5 {
                 commands.spawn((
                     ZombieSolt {
@@ -404,13 +406,13 @@ pub(crate) fn setup_cleanup_car(mut commands: Commands, asset_server: Res<AssetS
 }
 
 pub(crate) fn setup_resources(
-    settings: Res<GameSceneSettings>,
+    current_level: Res<CurrentLevel>,
     mut sunshine: ResMut<Sunshine>,
     mut zombie_wave_controller: ResMut<ZombieWaveController>,
 ) {
-    sunshine.0 = settings.sunshine;
+    sunshine.0 = current_level.sunshine;
     zombie_wave_controller.next_wave_timer = Timer::new(
-        Duration::from_secs_f32(if cfg!(debug_assertions) { 3.0 } else { 30.0 }),
+        Duration::from_secs_f32(current_level.first_wave_time),
         TimerMode::Once,
     );
     zombie_wave_controller.next_wave_index = 0;
@@ -430,8 +432,8 @@ pub(crate) fn setup_init_bgm(mut commands: Commands) {
     ));
 }
 
-pub(crate) fn setup_sunshine_solt(mut commands: Commands, settings: Res<GameSceneSettings>) {
-    if settings.natural_sunshine {
+pub(crate) fn setup_sunshine_solt(mut commands: Commands, current_level: Res<CurrentLevel>) {
+    if current_level.nature_sunshine {
         commands.spawn((
             NaturalSunshineSolt {
                 next_sunshine_timer: Timer::new(Duration::from_secs_f32(7.0), TimerMode::Once),
@@ -441,7 +443,7 @@ pub(crate) fn setup_sunshine_solt(mut commands: Commands, settings: Res<GameScen
     }
 }
 
-pub(crate) fn setup_enter_timer(mut commands: Commands, settings: Res<GameSceneSettings>) {
+pub(crate) fn setup_enter_timer(mut commands: Commands, current_level: Res<CurrentLevel>) {
     let mut time = 0.0;
     // 摄像机移动到中间，进入战场
     commands.spawn((
@@ -452,10 +454,10 @@ pub(crate) fn setup_enter_timer(mut commands: Commands, settings: Res<GameSceneS
     time += 2.0;
 
     // 无草坪之地，铺草地
-    if let Background::Day {
+    if let LevelBackground::Day {
         sod_type,
         upgrade_sod_type,
-    } = &settings.background
+    } = &current_level.background
     {
         if match (sod_type, upgrade_sod_type) {
             (_, false) => false,
@@ -802,14 +804,14 @@ pub(crate) fn setup_game_bgm(mut commands: Commands) {
 pub(crate) fn setup_game_ui(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    settings: Res<GameSceneSettings>,
+    current_level: Res<CurrentLevel>,
 ) {
     let font: Handle<Font> = asset_server.load("font/fzcgbk.ttf");
     commands.spawn((
         Text2dBundle {
             text: Text {
                 sections: vec![TextSection {
-                    value: settings.levelname.clone(),
+                    value: current_level.name.clone(),
                     style: TextStyle {
                         font: font.clone(),
                         color: Color::srgb(0.8, 0.5, 0.2),
@@ -832,7 +834,7 @@ pub(crate) fn setup_game_ui(
             Text2dBundle {
                 text: Text {
                     sections: vec![TextSection {
-                        value: settings.levelname.clone(),
+                        value: current_level.name.clone(),
                         style: TextStyle {
                             font: font.clone(),
                             color: Color::BLACK,
@@ -854,28 +856,20 @@ pub(crate) fn setup_game_ui(
 
 pub(crate) fn setup_standby_zombie(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut skeletons: ResMut<Assets<SkeletonData>>,
+    current_level: Res<CurrentLevel>,
+    zombie_registry: Res<ZombieRegistry>,
 ) {
-    let zombie = skeletons.add(SkeletonData::new_from_binary(
-        asset_server.load("reanim-spine/zombie.skel"),
-        asset_server.load("reanim-spine/zombie.atlas"),
-    ));
-
     let mut rng = thread_rng();
-    for _ in 0..3 {
-        let y = rng.gen_range(-300.0..150.0);
-        let x = rng.gen_range(0.0..175.0) - y * 0.1;
-        commands.spawn((
-            SpineBundle {
-                skeleton: zombie.clone(),
-                transform: Transform::from_xyz(x + 500.0, y, 1.0 - y * 0.001),
-                ..Default::default()
-            },
-            StandbyZombieTag,
-            AnimStandbyTag,
-            SceneTag,
-        ));
+    for Zombie { zombie, count } in &current_level.preview_zombies {
+        let zombie = zombie_registry.get(zombie).unwrap();
+
+        for _ in 0..*count {
+            let mut zombie_bundle = ZombieBundle::new(zombie.clone());
+            let y = rng.gen_range(-300.0..150.0);
+            let x = rng.gen_range(0.0..175.0) - y * 0.1;
+            zombie_bundle.spine.transform = Transform::from_xyz(x + 500.0, y, 1.0 - y * 0.001);
+            commands.spawn((zombie_bundle, StandbyZombieTag, AnimStandbyTag, SceneTag));
+        }
     }
 }
 

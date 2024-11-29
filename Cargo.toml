@@ -4,16 +4,17 @@ members = [
   "bin/bin_windows",
   "consts",
   "fw/fw_actor",
-  "fw/fw_anim", "fw/fw_button",
+  "fw/fw_anim",
+  "fw/fw_button",
   "fw/fw_cursor",
   "fw/fw_ftxm",
+  "mod/mod_level",
   "mod/mod_plant",
   "mod/mod_userdata",
   "mod/mod_zombie",
   "scene/scene_base",
   "scene/scene_game",
   "scene/scene_title",
-  "scene_res/scene_res_game",
 ]
 resolver = "2"
 

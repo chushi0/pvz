@@ -1,9 +1,0 @@
-[package]
-edition = "2021"
-name = "scene_res_game"
-version = "0.1.0"
-
-[dependencies]
-bevy = "0.14.2"
-mod_plant = {path = "../../mod/mod_plant"}
-mod_zombie = {path = "../../mod/mod_zombie"}

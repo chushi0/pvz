@@ -1,0 +1,11 @@
+[package]
+edition = "2021"
+name = "mod_level"
+version = "0.1.0"
+
+[dependencies]
+bevy = "0.14.2"
+mod_plant = {path = "../mod_plant"}
+mod_zombie = {path = "../mod_zombie"}
+serde = {version = "1.0.215", features = ["derive"]}
+serde-xml-rs = "0.6.0"

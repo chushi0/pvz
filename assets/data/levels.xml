@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Levels>
+    <Level>
+        <LevelType>
+            <Adventure level="1" />
+        </LevelType>
+        <Name>关卡 1-1</Name>
+        <Background>
+            <Day type="None" upgrade="true" />
+        </Background>
+        <Sunshine>150</Sunshine>
+        <NatureSunshine>true</NatureSunshine>
+        <FirstWaveTime>60</FirstWaveTime>
+        <Reward>
+            <Plant type="Sunflower" />
+        </Reward>
+        <PreviewZombie count="3">Basic</PreviewZombie>
+        <Wave>
+            <Zombie>Basic</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie>Basic</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie count="2">Basic</Zombie>
+        </Wave>
+    </Level>
+    <Level>
+        <LevelType>
+            <Adventure level="2" />
+        </LevelType>
+        <Name>关卡 1-2</Name>
+        <Background>
+            <Day type="SodRow1" upgrade="true" />
+        </Background>
+        <Sunshine>50</Sunshine>
+        <NatureSunshine>true</NatureSunshine>
+        <FirstWaveTime>60</FirstWaveTime>
+        <Reward>
+            <Plant type="CherryBomb" />
+        </Reward>
+        <PreviewZombie count="4">Basic</PreviewZombie>
+        <Wave>
+            <Zombie count="1">Basic</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie count="1">Basic</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie count="1">Basic</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie count="2">Basic</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie count="2">Basic</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie count="3">Basic</Zombie>
+        </Wave>
+        <Wave type="HugeWave">
+            <Zombie>Flag</Zombie>
+            <Zombie count="5">Basic</Zombie>
+        </Wave>
+    </Level>
+</Levels>
