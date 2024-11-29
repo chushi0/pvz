@@ -788,6 +788,7 @@ fn spawn_se(commands: &mut Commands, asset_server: &AssetServer, path: &'static 
     ));
 }
 
+#[allow(clippy::too_many_arguments)]
 #[inline]
 fn spawn_image(
     commands: &mut Commands,
@@ -898,6 +899,7 @@ pub(crate) fn update_image_cut(
 }
 
 // 输入：捡起种子
+#[allow(clippy::type_complexity)]
 pub(crate) fn input_pick_seed(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -923,8 +925,7 @@ pub(crate) fn input_pick_seed(
     // 点击的种子卡
     let Some((entity, PlantMetaData(metadata), cooldown, usable, _)) = seed
         .iter()
-        .filter(|(_, _, _, _, hover)| matches!(hover, SeedHover::Hover))
-        .next()
+        .find(|(_, _, _, _, hover)| matches!(hover, SeedHover::Hover))
     else {
         return;
     };
@@ -1005,6 +1006,7 @@ pub(crate) fn update_follow_cursor(
 }
 
 // 输入：种植物
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn plant_seed(
     mut commands: Commands,
     mut solts: Query<(Entity, &mut PlantSolt, &GlobalTransform, &LanePosition)>,
@@ -1057,8 +1059,7 @@ pub(crate) fn plant_seed(
     // 检查植物种植位置，有花盆优先考虑花盆
     let pot_plant = solt
         .pot
-        .map(|entity| plants.get(entity).ok())
-        .flatten()
+        .and_then(|entity| plants.get(entity).ok())
         .map(|metadata| metadata.0.id);
     let can_plant_on = if solt.grave.is_some() {
         plant_info.plant_on.grave
@@ -1303,6 +1304,7 @@ pub(crate) fn update_movement(
 }
 
 // 僵尸进入啃食状态
+#[allow(clippy::type_complexity)]
 pub(crate) fn check_zombie_eat_start(
     mut commands: Commands,
     mut zombie: Query<
@@ -1470,6 +1472,7 @@ pub(crate) fn update_zombie_hp_anim(
 }
 
 // 僵尸进入临界状态
+#[allow(clippy::type_complexity)]
 pub(crate) fn update_zombie_enter_critical(
     mut commands: Commands,
     zombies: Query<
@@ -1650,6 +1653,7 @@ pub(crate) fn remove_outrange_projectile(
 }
 
 // 刷新僵尸流
+#[allow(clippy::type_complexity)]
 pub(crate) fn update_zombie_wave(
     mut commands: Commands,
     time: Res<Time>,
@@ -1859,7 +1863,7 @@ pub(crate) fn update_level_progress(
     let mut progress = huge_wave as f32
         + (wave_after_huge + 1) as f32 / (wave_before_huge + wave_after_huge + 2) as f32;
     progress = split_part * progress - 15.;
-    progress = progress.min(158.).max(0.);
+    progress = progress.clamp(0., 158.);
 
     // special case: 没有huge wave时，最后一波展示会有问题，特殊处理下
     if zombie_wave_controller.next_wave_index == settings.zombie_waves.len() {
@@ -2084,6 +2088,7 @@ pub(crate) fn update_summon_zombie(
 }
 
 // 检查植物种子是否可以使用
+#[allow(clippy::type_complexity)]
 pub(crate) fn check_plant_seed_usable(
     sunshine: Res<Sunshine>,
     mut seeds: Query<
@@ -2244,6 +2249,7 @@ pub(crate) fn collect_sunshine(
 }
 
 // 触发清理车
+#[allow(clippy::type_complexity)]
 pub(crate) fn trigger_cleanup_car(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -2329,6 +2335,7 @@ pub(crate) fn update_reward_solt(
 }
 
 // 检查并生成关卡奖励
+#[allow(clippy::type_complexity)]
 pub(crate) fn check_summon_reward(
     mut commands: Commands,
     reward_solt: Query<(Entity, &GlobalTransform), With<RewardSolt>>,
@@ -2395,11 +2402,7 @@ pub(crate) fn input_pick_reward_seed(
     }
 
     // 点击的种子卡
-    let Some(_) = seed
-        .iter()
-        .filter(|hover| matches!(hover, SeedHover::Hover))
-        .next()
-    else {
+    let Some(_) = seed.iter().find(|hover| matches!(hover, SeedHover::Hover)) else {
         return;
     };
 

@@ -44,11 +44,10 @@ fn update_cursor_position(
                 .ok()
                 .and_then(|window| window.cursor_position())
                 .or_else(|| touches_input.first_pressed_position())
-                .map(|cursor_position| {
+                .and_then(|cursor_position| {
                     camera
                         .viewport_to_world_2d(camera_transform, cursor_position - viewport_position)
                 })
-                .flatten()
                 .map(|position| (entity, position))
         })
         .collect();

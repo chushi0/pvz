@@ -13,6 +13,7 @@ use crate::components::{
     SeedHover, UnusedOverlay,
 };
 
+#[allow(clippy::type_complexity)]
 pub(crate) fn setup_seeds(
     mut commands: Commands,
     asset_server: Res<AssetServer>,

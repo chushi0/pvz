@@ -7,7 +7,6 @@ use rodio::Source;
 use std::fs::File;
 use std::io::Read;
 use std::mem::forget;
-use std::u8;
 
 pub struct FwFtxmPlugin;
 

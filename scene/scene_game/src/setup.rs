@@ -81,12 +81,11 @@ pub(crate) fn setup_background(
 
     // 白天无草皮之地
     if let Background::Day { sod_type, .. } = &settings.background {
-        loop {
-            let image = match sod_type {
-                SodType::SodRow1 => "images/sod1row.png",
-                SodType::SodRow3 => "images/sod3row.png",
-                SodType::None | SodType::SodRow5 => break,
-            };
+        if let Some(image) = match sod_type {
+            SodType::SodRow1 => Some("images/sod1row.png"),
+            SodType::SodRow3 => Some("images/sod3row.png"),
+            SodType::None | SodType::SodRow5 => None,
+        } {
             let image = asset_server.load(image);
 
             commands.spawn((
@@ -101,8 +100,6 @@ pub(crate) fn setup_background(
                 },
                 SceneTag,
             ));
-
-            break;
         }
     }
 

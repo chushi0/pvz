@@ -191,7 +191,7 @@ fn apply_anim_keyframe(
                     scale,
                 };
             }
-            None => *target_transform = keyframe_transform.clone(),
+            None => *target_transform = *keyframe_transform,
         }
     };
 
