@@ -4,7 +4,7 @@ use bevy::{prelude::*, utils::HashMap};
 use bevy_spine::SkeletonData;
 use serde::Deserialize;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, PartialOrd, Ord)]
 pub enum PlantType {
     // 豌豆射手
     PeaShooter,

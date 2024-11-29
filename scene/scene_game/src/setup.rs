@@ -10,10 +10,8 @@ use bevy_spine::prelude::*;
 use fw_actor::components::AnimStandbyTag;
 use fw_anim::{AnimationBundle, AnimationClip, AnimationClips, CustomAnimationTrigger, KeyFrame};
 use fw_ftxm::{FtxmSource, MainMusicTable};
-use mod_plant::{
-    components::PlantSeedBundle,
-    metadata::{PlantRegistry, PlantType},
-};
+use mod_plant::{components::PlantSeedBundle, metadata::PlantRegistry};
+use mod_userdata::UserData;
 use mod_zombie::components::{AnimZombieEatTag, AnimZombieMoveTag};
 use rand::{thread_rng, Rng};
 use scene_res_game::{Background, GameSceneSettings, SodType};
@@ -309,7 +307,7 @@ pub(crate) fn setup_zombie_solt(mut commands: Commands, settings: Res<GameSceneS
 pub(crate) fn setup_seedbank(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    plant_registry: Res<PlantRegistry>,
+    userdata: Res<UserData>,
 ) {
     let seedbank = asset_server.load("images/seedbank.png");
 
@@ -319,13 +317,14 @@ pub(crate) fn setup_seedbank(
                 sprite: Sprite {
                     anchor: Anchor::TopLeft,
                     custom_size: Some(Vec2 {
-                        x: 80.0 + 12.0 + 5.0 + 55.0 * 6.0,
+                        x: 80.0 + 12.0 + 5.0 + 55.0 * userdata.plant_solt_count as f32,
                         y: 87.0,
                     }),
                     ..Default::default()
                 },
                 texture: seedbank,
                 visibility: Visibility::Hidden,
+                transform: Transform::from_xyz(-400.0, 300.0, 1.0),
                 ..Default::default()
             },
             ImageScaleMode::Sliced(TextureSlicer {
@@ -365,23 +364,6 @@ pub(crate) fn setup_seedbank(
                 },
                 SunshineText,
             ));
-
-            for i in 0..1 {
-                parent.spawn((
-                    PlantSeedBundle {
-                        transform: Transform::from_translation(Vec3 {
-                            x: 85.0 + 55.0 * i as f32 + 55.0 * 0.5,
-                            y: -8.0 - 35.0,
-                            z: 0.1,
-                        }),
-
-                        ..PlantSeedBundle::new(
-                            plant_registry.get(&PlantType::PeaShooter).unwrap().clone(),
-                        )
-                    },
-                    PickableSeed,
-                ));
-            }
         });
 }
 
@@ -443,20 +425,8 @@ pub(crate) fn setup_sunshine_solt(mut commands: Commands, settings: Res<GameScen
     }
 }
 
-// 设定游戏启动时间轴
-pub(crate) fn setup_init_timer(mut commands: Commands, settings: Res<GameSceneSettings>) {
-    let mut time = 3.0;
-
-    // 摄像机移动到右侧，进入选卡界面
-    commands.spawn((
-        GameTimer(Timer::from_seconds(time, TimerMode::Once)),
-        GameTimerTag::CameraToRightAnim,
-        SceneTag,
-    ));
-    time += 4.0;
-
-    // TODO: 需要检查是否需要选卡
-
+pub(crate) fn setup_enter_timer(mut commands: Commands, settings: Res<GameSceneSettings>) {
+    let mut time = 0.0;
     // 摄像机移动到中间，进入战场
     commands.spawn((
         GameTimer(Timer::from_seconds(time, TimerMode::Once)),
@@ -532,6 +502,64 @@ pub(crate) fn setup_init_timer(mut commands: Commands, settings: Res<GameSceneSe
     commands.spawn((
         GameTimer(Timer::from_seconds(time, TimerMode::Once)),
         GameTimerTag::EnterState(GameState::Main),
+        SceneTag,
+    ));
+}
+
+// 设定游戏启动时间轴
+pub(crate) fn setup_init_timer(
+    mut commands: Commands,
+    userdata: Res<UserData>,
+    plant_registry: Res<PlantRegistry>,
+) {
+    let mut time = 3.0;
+
+    // 摄像机移动到右侧，查看僵尸
+    commands.spawn((
+        GameTimer(Timer::from_seconds(time, TimerMode::Once)),
+        GameTimerTag::CameraToRightAnim,
+        SceneTag,
+    ));
+    time += 4.0;
+
+    // 检查是否需要选卡
+    // TODO: 目前仅判断植物槽数量
+    if userdata.unlock_plugins.len() < userdata.plant_solt_count {
+        // 植物数量小于植物槽，无需选卡
+        // 需要在seedbank位置生成对应植物
+        let mut unlock_plugins = userdata.unlock_plugins.iter().collect::<Vec<_>>();
+        unlock_plugins.sort();
+        for (i, plant) in unlock_plugins.into_iter().enumerate() {
+            commands.spawn((
+                PlantSeedBundle {
+                    transform: Transform::from_translation(Vec3 {
+                        x: 85.0 + 55.0 * i as f32 + 55.0 * 0.5 - 400.0,
+                        y: -8.0 - 35.0 + 300.0,
+                        z: 1.1,
+                    }),
+                    visibility: Visibility::Hidden,
+                    ..PlantSeedBundle::new(plant_registry.get(plant).unwrap().clone())
+                },
+                SceneTag,
+                PickableSeed,
+                GameUiTag,
+                SeedbankTag,
+            ));
+        }
+
+        // 进Enter状态
+        commands.spawn((
+            GameTimer(Timer::from_seconds(time, TimerMode::Once)),
+            GameTimerTag::EnterState(GameState::Enter),
+            SceneTag,
+        ));
+        return;
+    }
+
+    // 需要选卡，进选卡状态
+    commands.spawn((
+        GameTimer(Timer::from_seconds(time, TimerMode::Once)),
+        GameTimerTag::EnterState(GameState::ChooseSeed),
         SceneTag,
     ));
 }

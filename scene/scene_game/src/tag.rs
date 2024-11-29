@@ -298,8 +298,11 @@ pub(crate) struct RewardSolt;
 #[derive(Component)]
 pub(crate) struct RewardTag;
 
+// 材质透明度动画
 #[derive(Component)]
 pub(crate) struct MaterialColorAnim;
+
+//
 
 impl PlantSolt {
     // 按默认僵尸啃食顺序返回植物

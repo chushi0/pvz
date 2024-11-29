@@ -191,22 +191,31 @@ fn trigger_move_camera_to_left(
 
 fn trigger_fade_in_seed_bank(
     mut commands: Commands,
-    mut seedbank: Query<(Entity, &mut Visibility), With<SeedbankTag>>,
+    mut seedbank: Query<(Entity, &mut Visibility, &Transform), With<SeedbankTag>>,
 ) {
     let mut clips = Vec::new();
-    for (entity, mut visiblity) in &mut seedbank {
-        *visiblity = Visibility::Visible;
+    for (entity, mut visibility, transform) in &mut seedbank {
+        // 防止多次fadein
+        if matches!(*visibility, Visibility::Visible) {
+            continue;
+        }
+
+        *visibility = Visibility::Visible;
         clips.push(AnimationClip {
             entity,
             keyframes: vec![
                 KeyFrame {
                     time: Duration::ZERO,
-                    transform: Some(Transform::from_xyz(-370.0, 400.0, 1.0)),
+                    transform: Some(Transform::from_xyz(
+                        transform.translation.x,
+                        transform.translation.y + 100.,
+                        transform.translation.z,
+                    )),
                     ..Default::default()
                 },
                 KeyFrame {
                     time: Duration::from_secs_f32(0.2),
-                    transform: Some(Transform::from_xyz(-370.0, 300.0, 1.0)),
+                    transform: Some(*transform),
                     ..Default::default()
                 },
             ],
@@ -226,7 +235,7 @@ fn trigger_fade_in_conveyer_belt() {}
 
 fn trigger_fade_in_cars(
     mut commands: Commands,
-    mut cars: Query<(Entity, &mut Visibility, &CleanerCar), Without<SeedbankTag>>,
+    mut cars: Query<(Entity, &mut Visibility, &CleanerCar)>,
 ) {
     let mut clips = Vec::new();
     for (entity, mut visiblity, car) in &mut cars {

@@ -3452,6 +3452,7 @@ dependencies = [
  "fw_cursor",
  "fw_ftxm",
  "mod_plant",
+ "mod_userdata",
  "mod_zombie",
  "rand",
  "scene_base",

@@ -56,6 +56,7 @@ impl Plugin for SceneGamePlugin {
                 )
                     .chain(),
             )
+            .add_systems(OnEnter(GameState::Enter), setup::setup_enter_timer)
             .add_systems(
                 OnEnter(GameState::Main),
                 (
