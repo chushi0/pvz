@@ -29,6 +29,7 @@ impl Plugin for ModPlantPlugin {
                         .chain(),
                     systems::start_shoot_anim,
                     systems::start_produce_anim,
+                    systems::start_instant_anim,
                 ),
             );
     }

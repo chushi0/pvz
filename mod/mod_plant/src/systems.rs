@@ -4,13 +4,16 @@ use bevy::{
     text::Text2dBounds,
 };
 use bevy_spine::prelude::*;
-use consts::anim::{INDEX_PLANT_PRODUCE, INDEX_PLANT_SHOOT, NAME_PLANT_PRODUCE, NAME_PLANT_SHOOT};
+use consts::anim::{
+    INDEX_PLANT_INSTANT, INDEX_PLANT_PRODUCE, INDEX_PLANT_SHOOT, NAME_PLANT_INSTANT,
+    NAME_PLANT_PRODUCE, NAME_PLANT_SHOOT,
+};
 use fw_actor::oneshot_anim;
 use fw_cursor::CursorPosition;
 
 use crate::components::{
-    AnimPlantProduceTag, AnimPlantShootTag, CooldownOverlay, PlantCooldown, PlantMetaData,
-    PlantSeed, PlantUsable, SeedHover, UnusedOverlay,
+    AnimPlantInstantTag, AnimPlantProduceTag, AnimPlantShootTag, CooldownOverlay, PlantCooldown,
+    PlantMetaData, PlantSeed, PlantUsable, SeedHover, UnusedOverlay,
 };
 
 #[allow(clippy::type_complexity)]
@@ -232,4 +235,11 @@ oneshot_anim!(
     start_produce_anim,
     INDEX_PLANT_PRODUCE,
     NAME_PLANT_PRODUCE
+);
+
+oneshot_anim!(
+    AnimPlantInstantTag,
+    start_instant_anim,
+    INDEX_PLANT_INSTANT,
+    NAME_PLANT_INSTANT
 );

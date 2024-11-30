@@ -58,6 +58,28 @@
             <Atlas>reanim-spine/cherry_bomb.atlas</Atlas>
             <Skeleton>reanim-spine/cherry_bomb.skel</Skeleton>
         </Render>
-        <Instant>CherryBomb</Instant>
+        <Instant>
+            <AnimTime>1</AnimTime>
+            <EnterSound>sounds/reverse_explosion.ogg</EnterSound>
+            <Effect>
+                <Type>
+                    <Explode radius="130" />
+                </Type>
+                <Time>1.0</Time>
+                <Sound>sounds/cherrybomb.ogg</Sound>
+                <Particle>CherryBomb</Particle>
+            </Effect>
+        </Instant>
+    </Plant>
+    <Plant id="WallNut">
+        <Name>坚果墙</Name>
+        <Description>挡住僵尸，保护它背后的植物。</Description>
+        <Sunshine>50</Sunshine>
+        <Cooldown>30</Cooldown>
+        <Hp>4000</Hp>
+        <Render>
+            <Atlas>reanim-spine/wall_nut.atlas</Atlas>
+            <Skeleton>reanim-spine/wall_nut.skel</Skeleton>
+        </Render>
     </Plant>
 </Plants>

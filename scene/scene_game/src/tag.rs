@@ -201,6 +201,21 @@ pub(crate) struct PlantProduceTag {
     pub elaspse: f32,
 }
 
+// 即时效果控制
+#[derive(Component)]
+pub(crate) struct PlantInstantTag {
+    // 动画计时
+    pub anim_timer: Timer,
+    // 应用效果
+    pub effect_timer: Vec<Timer>,
+}
+
+#[derive(Component)]
+pub(crate) struct ExplodeEffectTag {
+    pub radius: f32,
+    pub damage: f32,
+}
+
 // 植物是否要进行攻击（是否侦测到攻击范围内有敌人）
 #[derive(Component)]
 pub(crate) enum PlantShootTag {
@@ -346,6 +361,9 @@ pub(crate) struct SeedTransformInChooserBox(pub Transform);
 // 移动计时器，在时间结束后移除速度和加速度
 #[derive(Component)]
 pub(crate) struct MoveTimer(pub Timer);
+
+#[derive(Component)]
+pub(crate) struct CherryBombParticleTag;
 
 impl PlantSolt {
     // 按默认僵尸啃食顺序返回植物

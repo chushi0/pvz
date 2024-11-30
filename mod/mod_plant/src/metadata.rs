@@ -145,6 +145,50 @@ pub struct PlantInfo {
     pub shoot: Option<PlantShoot>,
     #[serde(rename = "Produce")]
     pub produce: Option<PlantProduce>,
+    #[serde(rename = "Instant")]
+    pub instant: Option<PlantInstant>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PlantInstant {
+    #[serde(rename = "AnimTime")]
+    pub anim_time: f32,
+    #[serde(rename = "Invincible")]
+    #[serde(default = "default_true")]
+    pub invincible: bool,
+    #[serde(rename = "EnterSound")]
+    #[serde(default)]
+    pub enter_sound: Option<String>,
+    #[serde(rename = "Effect")]
+    pub effects: Vec<InstantEffect>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct InstantEffect {
+    #[serde(rename = "Type")]
+    pub effect_type: InstantEffectType,
+    #[serde(rename = "Time")]
+    pub effect_time: f32,
+    #[serde(rename = "Sound")]
+    #[serde(default)]
+    pub sound: Option<String>,
+    #[serde(rename = "Particle")]
+    #[serde(default)]
+    pub particle: Option<Particle>,
+}
+
+#[derive(Debug, Deserialize)]
+pub enum InstantEffectType {
+    Explode {
+        radius: f32,
+        #[serde(default = "default_explode_damage")]
+        damage: f32,
+    },
+}
+
+#[derive(Debug, Deserialize)]
+pub enum Particle {
+    CherryBomb,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -315,4 +359,8 @@ const fn default_false() -> bool {
 
 const fn f32_infinity() -> f32 {
     f32::INFINITY
+}
+
+const fn default_explode_damage() -> f32 {
+    1800.
 }

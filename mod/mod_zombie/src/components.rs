@@ -89,3 +89,21 @@ impl From<&Hp> for ZombieHp {
         }
     }
 }
+
+impl ZombieHp {
+    pub fn damage(&mut self, mut damage: f32) {
+        for hp in &mut self.armor_hp {
+            // 如果盔甲生命值足够承受伤害，则由盔甲全额承受
+            // 否则，由下一个盔甲（或本体）承担多余的伤害
+            if *hp >= damage {
+                *hp -= damage;
+                damage = 0.0;
+                break;
+            } else {
+                damage -= *hp;
+                *hp = 0.0;
+            }
+        }
+        self.hp -= damage;
+    }
+}

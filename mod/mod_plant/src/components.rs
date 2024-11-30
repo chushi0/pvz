@@ -58,6 +58,9 @@ pub struct AnimPlantShootTag;
 #[derive(Component)]
 pub struct AnimPlantProduceTag;
 
+#[derive(Component)]
+pub struct AnimPlantInstantTag;
+
 #[derive(Bundle)]
 pub struct PlantSeedBundle {
     // 植物类型
