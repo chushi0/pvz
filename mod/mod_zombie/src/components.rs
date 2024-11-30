@@ -55,6 +55,18 @@ pub struct AnimZombieFullDamageTag;
 #[derive(Debug, Component)]
 pub struct AnimZombieCriticalTag;
 
+// 僵尸盔甲动画A
+#[derive(Debug, Component)]
+pub struct AnimZombieArmor1Tag;
+
+// 僵尸盔甲动画B
+#[derive(Debug, Component)]
+pub struct AnimZombieArmor2Tag;
+
+// 僵尸盔甲动画C
+#[derive(Debug, Component)]
+pub struct AnimZombieArmor3Tag;
+
 impl ZombieBundle {
     pub fn new(zombie: Arc<ZombieInfo>) -> Self {
         Self {

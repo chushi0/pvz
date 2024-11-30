@@ -14,7 +14,10 @@
         <Reward>
             <Plant type="Sunflower" />
         </Reward>
-        <PreviewZombie count="3">Basic</PreviewZombie>
+        <PreviewZombie count="5">Basic</PreviewZombie>
+        <Wave>
+            <Zombie>Basic</Zombie>
+        </Wave>
         <Wave>
             <Zombie>Basic</Zombie>
         </Wave>
@@ -39,28 +42,69 @@
         <Reward>
             <Plant type="CherryBomb" />
         </Reward>
-        <PreviewZombie count="4">Basic</PreviewZombie>
+        <PreviewZombie count="10">Basic</PreviewZombie>
         <Wave>
-            <Zombie count="1">Basic</Zombie>
+            <Zombie>Basic</Zombie>
         </Wave>
         <Wave>
-            <Zombie count="1">Basic</Zombie>
+            <Zombie>Basic</Zombie>
         </Wave>
         <Wave>
-            <Zombie count="1">Basic</Zombie>
-        </Wave>
-        <Wave>
-            <Zombie count="2">Basic</Zombie>
+            <Zombie>Basic</Zombie>
         </Wave>
         <Wave>
             <Zombie count="2">Basic</Zombie>
         </Wave>
         <Wave>
-            <Zombie count="3">Basic</Zombie>
+            <Zombie count="2">Basic</Zombie>
         </Wave>
         <Wave type="HugeWave">
             <Zombie>Flag</Zombie>
-            <Zombie count="5">Basic</Zombie>
+            <Zombie count="4">Basic</Zombie>
+        </Wave>
+    </Level>
+    <Level>
+        <LevelType>
+            <Adventure level="3" />
+        </LevelType>
+        <Name>关卡 1-3</Name>
+        <Background>
+            <Day type="SodRow3" />
+        </Background>
+        <Sunshine>50</Sunshine>
+        <NatureSunshine>true</NatureSunshine>
+        <FirstWaveTime>60</FirstWaveTime>
+        <Reward>
+            <Plant type="WallNut" />
+        </Reward>
+        <PreviewZombie count="7">Basic</PreviewZombie>
+        <PreviewZombie count="2">Conehead</PreviewZombie>
+        <Wave>
+            <Zombie>Basic</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie>Basic</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie>Basic</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie>Conehead</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie>Conehead</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie count="2">Basic</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie>Conehead</Zombie>
+            <Zombie>Basic</Zombie>
+        </Wave>
+        <Wave type="HugeWave">
+            <Zombie>Flag</Zombie>
+            <Zombie>Conehead</Zombie>
+            <Zombie count="4">Basic</Zombie>
         </Wave>
     </Level>
 </Levels>

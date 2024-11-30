@@ -25,6 +25,9 @@ impl Plugin for ModZombiePlugin {
                 systems::start_half_damage_anim,
                 systems::start_full_damage_anim,
                 systems::start_critical_anim,
+                systems::start_armor_1_anim,
+                systems::start_armor_2_anim,
+                systems::start_armor_3_anim,
             ),
         );
     }

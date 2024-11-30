@@ -26,8 +26,9 @@ use mod_plant::{
 use mod_userdata::UserData;
 use mod_zombie::{
     components::{
-        AnimZombieCriticalTag, AnimZombieEatStopTag, AnimZombieEatTag, AnimZombieFullDamageTag,
-        AnimZombieHalfDamageTag, AnimZombieMoveTag, ZombieBundle, ZombieHp, ZombieMetadata,
+        AnimZombieArmor1Tag, AnimZombieArmor2Tag, AnimZombieArmor3Tag, AnimZombieCriticalTag,
+        AnimZombieEatStopTag, AnimZombieEatTag, AnimZombieFullDamageTag, AnimZombieHalfDamageTag,
+        AnimZombieMoveTag, ZombieBundle, ZombieHp, ZombieMetadata,
     },
     metadata::ZombieRegistry,
 };
@@ -1551,7 +1552,20 @@ pub(crate) fn zombie_projectile_damage(
 
         // 如果不处于无敌状态，则计算伤害
         if invincible.is_none() {
-            zombie_hp.hp -= 20.0;
+            let mut damage = 20.0;
+            for hp in &mut zombie_hp.armor_hp {
+                // 如果盔甲生命值足够承受伤害，则由盔甲全额承受
+                // 否则，由下一个盔甲（或本体）承担多余的伤害
+                if *hp >= damage {
+                    *hp -= damage;
+                    damage = 0.0;
+                    break;
+                } else {
+                    damage -= *hp;
+                    *hp = 0.0;
+                }
+            }
+            zombie_hp.hp -= damage;
         }
 
         // 音效
@@ -1577,16 +1591,38 @@ pub(crate) fn update_zombie_hp_anim(
     mut zombie: Query<(Entity, &ZombieMetadata, &ZombieHp, &mut ZombieHpAnim)>,
 ) {
     for (entity, ZombieMetadata(metadata), hp, mut hp_anim) in &mut zombie {
+        // 盔甲动画
+        // 目前仅支持一个盔甲
+        if hp.armor_hp.len() > 0 {
+            let armor_hp = hp.armor_hp[0];
+            let armor_max_hp = metadata.hp.armor[0].hp;
+            if armor_hp <= armor_max_hp * 2.0 / 3.0 && !hp_anim.trigger_armor_anims_1 {
+                commands.entity(entity).insert(AnimZombieArmor1Tag);
+                hp_anim.trigger_armor_anims_1 = true;
+            }
+            if armor_hp <= armor_max_hp / 3.0 && !hp_anim.trigger_armor_anims_2 {
+                commands.entity(entity).insert(AnimZombieArmor2Tag);
+                hp_anim.trigger_armor_anims_2 = true;
+            }
+            if armor_hp <= 0.0 && !hp_anim.trigger_armor_anims_3 {
+                commands.entity(entity).insert(AnimZombieArmor3Tag);
+                hp_anim.trigger_armor_anims_3 = true;
+            }
+        }
+
+        // 半血动画
         if hp.hp <= metadata.hp.real / 2.0 + metadata.hp.critical
             && !hp_anim.trigger_half_damage_anim
         {
             commands.entity(entity).insert(AnimZombieHalfDamageTag);
             hp_anim.trigger_half_damage_anim = true;
         }
+        // 进入临界动画
         if hp.hp <= metadata.hp.critical && !hp_anim.trigger_full_damage_anim {
             commands.entity(entity).insert(AnimZombieFullDamageTag);
             hp_anim.trigger_full_damage_anim = true;
         }
+        // 死亡动画
         if hp.hp <= 0.0 && !hp_anim.trigger_critical_anim {
             commands
                 .entity(entity)

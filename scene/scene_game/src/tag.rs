@@ -254,6 +254,9 @@ pub(crate) struct ZombieHpAnim {
     pub trigger_half_damage_anim: bool,
     pub trigger_full_damage_anim: bool,
     pub trigger_critical_anim: bool,
+    pub trigger_armor_anims_1: bool,
+    pub trigger_armor_anims_2: bool,
+    pub trigger_armor_anims_3: bool,
 }
 
 // 无敌，不会造成伤害
