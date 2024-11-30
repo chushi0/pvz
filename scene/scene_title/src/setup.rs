@@ -490,6 +490,7 @@ pub(crate) fn spawn_bg_right(
     });
 }
 
+#[allow(clippy::too_many_arguments)]
 fn spawn_image(
     commands: &mut Commands,
     asset_server: &AssetServer,
@@ -548,6 +549,7 @@ fn spawn_image(
     entity
 }
 
+#[allow(clippy::too_many_arguments)]
 fn spawn_image_button<B: Bundle>(
     parent: &mut ChildBuilder<'_>,
     shadow: Handle<Image>,

@@ -1,0 +1,13 @@
+[package]
+edition = "2021"
+name = "scene_reward"
+version = "0.1.0"
+
+[dependencies]
+bevy = "0.14.2"
+fw_anim = {path = "../../fw/fw_anim"}
+fw_button = {path = "../../fw/fw_button"}
+fw_ftxm = {path = "../../fw/fw_ftxm"}
+mod_level = {path = "../../mod/mod_level"}
+mod_plant = {path = "../../mod/mod_plant"}
+scene_base = {path = "../scene_base"}

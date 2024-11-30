@@ -1028,11 +1028,9 @@ pub(crate) fn setup_exit_reward_anim(
                         },
                         KeyFrame {
                             time: Duration::from_secs_f32(3.0),
-                            transform: Some(Transform::from_translation(Vec3 {
-                                x: 0.,
-                                y: 200.,
-                                z: 50.,
-                            })),
+                            transform: Some(
+                                Transform::from_xyz(0.0, 100.0, 50.0).with_scale(Vec3::ONE * 2.),
+                            ),
                             ..Default::default()
                         },
                     ],

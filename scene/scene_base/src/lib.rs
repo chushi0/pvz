@@ -7,6 +7,7 @@ pub enum GameScene {
     Splash,
     Title,
     Game,
+    Reward,
 }
 
 pub struct SceneBasePlugin;

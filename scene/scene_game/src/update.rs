@@ -835,6 +835,7 @@ fn trigger_finish(
     level: Res<CurrentLevel>,
 ) {
     // 获取奖励
+    #[allow(clippy::single_match)]
     match level.reward {
         Some(Reward::Plant { plant }) => {
             userdata.unlock_plugins.insert(plant);
@@ -851,8 +852,8 @@ fn trigger_finish(
         }
     }
 
-    // TODO: 游戏结束，切到其他画面
-    next_screen.set(GameScene::Title);
+    // 游戏结束，切到奖励画面
+    next_screen.set(GameScene::Reward);
 }
 
 fn trigger_reset(mut next_screen: ResMut<NextState<GameScene>>) {

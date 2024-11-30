@@ -38,5 +38,6 @@ pub fn main() {
         .add_plugins(scene_splash::SceneSplashPlugin)
         .add_plugins(scene_title::SceneTitlePlugin)
         .add_plugins(scene_game::SceneGamePlugin)
+        .add_plugins(scene_reward::SceneRewardPlugin)
         .run();
 }

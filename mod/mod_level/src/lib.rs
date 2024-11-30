@@ -60,6 +60,7 @@ impl Deref for CurrentLevel {
 #[derive(Debug, Deserialize, Hash, PartialEq, Eq, Clone, Copy)]
 pub enum LevelType {
     Adventure { level: u32 },
+    PlantZombie,
 }
 
 #[derive(Debug, Deserialize)]
