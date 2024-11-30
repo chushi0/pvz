@@ -957,11 +957,10 @@ pub(crate) fn setup_gameover_timer(mut commands: Commands) {
     ));
 
     // TODO: 游戏结束对话框，重新开始或返回
-    // 暂时用 FINISH 代替
     time += 5.5;
     commands.spawn((
         GameTimer(Timer::from_seconds(time, TimerMode::Once)),
-        GameTimerTag::Finish,
+        GameTimerTag::Reset,
         SceneTag,
     ));
 }

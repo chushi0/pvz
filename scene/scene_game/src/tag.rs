@@ -75,6 +75,8 @@ pub(crate) enum GameTimerTag {
     UpgradeSod,
     // 结束本局游戏
     Finish,
+    // 重启游戏
+    Reset,
 }
 
 // 应用颜色动画

@@ -1,8 +1,7 @@
 [package]
 edition = "2021"
-name = "scene_base"
+name = "fw_transition"
 version = "0.1.0"
 
 [dependencies]
 bevy = "0.14.2"
-fw_transition = {path = "../../fw/fw_transition"}

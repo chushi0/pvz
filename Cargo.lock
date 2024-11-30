@@ -1918,6 +1918,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "fw_transition"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "gethostname"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3458,6 +3465,7 @@ name = "scene_base"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "fw_transition",
 ]
 
 [[package]]
@@ -3473,6 +3481,7 @@ dependencies = [
  "fw_button",
  "fw_cursor",
  "fw_ftxm",
+ "fw_transition",
  "mod_level",
  "mod_plant",
  "mod_userdata",

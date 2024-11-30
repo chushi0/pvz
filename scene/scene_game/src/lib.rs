@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_spatial::*;
+use fw_transition::{OnReenter, OnReexit};
 use resource::{Sunshine, ZombieWaveController};
 use scene_base::GameScene;
 use tag::{PlantTag, ZombieAttackableTag};
@@ -38,7 +39,7 @@ impl Plugin for SceneGamePlugin {
                     .with_transform(TransformMode::GlobalTransform),
             )
             .add_systems(
-                OnEnter(scene_base::GameScene::Game),
+                OnReenter(GameScene::Game),
                 (
                     setup::setup_camera,
                     setup::setup_background,
@@ -93,7 +94,7 @@ impl Plugin for SceneGamePlugin {
                 )
                     .run_if(in_state(GameScene::Game)),
             )
-            .add_systems(OnExit(GameScene::Game), setup::clear_scene)
+            .add_systems(OnReexit(GameScene::Game), setup::clear_scene)
             .add_systems(
                 Update,
                 (

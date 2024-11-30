@@ -10,6 +10,7 @@ fw_anim = {path = "../../fw/fw_anim"}
 fw_button = {path = "../../fw/fw_button"}
 fw_cursor = {path = "../../fw/fw_cursor"}
 fw_ftxm = {path = "../../fw/fw_ftxm"}
+fw_transition = {path = "../../fw/fw_transition"}
 mod_level = {path = "../../mod/mod_level"}
 mod_plant = {path = "../../mod/mod_plant"}
 mod_userdata = {path = "../../mod/mod_userdata"}

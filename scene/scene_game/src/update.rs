@@ -77,6 +77,7 @@ pub(crate) struct UpdateTimerSystem {
     stop_bgm: SystemId,
     upgrade_sod: SystemId,
     finish: SystemId,
+    reset: SystemId,
 }
 
 // 计时器 延迟执行
@@ -118,6 +119,7 @@ pub(crate) fn update_timer(
             stop_bgm: commands.register_one_shot_system(trigger_stop_bgm),
             upgrade_sod: commands.register_one_shot_system(trigger_upgrade_sod),
             finish: commands.register_one_shot_system(trigger_finish),
+            reset: commands.register_one_shot_system(trigger_reset),
         })
     }
     let Some(timer_trigger) = &*timer_trigger else {
@@ -169,6 +171,7 @@ pub(crate) fn update_timer(
             }
             GameTimerTag::UpgradeSod => timer_trigger.upgrade_sod,
             GameTimerTag::Finish => timer_trigger.finish,
+            GameTimerTag::Reset => timer_trigger.reset,
         };
 
         commands.run_system(trigger_system);
@@ -850,6 +853,11 @@ fn trigger_finish(
 
     // TODO: 游戏结束，切到其他画面
     next_screen.set(GameScene::Title);
+}
+
+fn trigger_reset(mut next_screen: ResMut<NextState<GameScene>>) {
+    next_screen.set(GameScene::Game);
+    debug!("game has been reset");
 }
 
 #[inline]
