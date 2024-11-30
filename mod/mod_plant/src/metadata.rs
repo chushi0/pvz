@@ -206,6 +206,9 @@ pub struct PlantRender {
     pub atlas: String,
     #[serde(rename = "Skeleton")]
     pub skeleton: String,
+    #[serde(rename = "DamageSkin")]
+    #[serde(default = "default_false")]
+    pub damage_skin: bool,
 
     #[serde(skip)]
     pub spine_skeleton: Handle<SkeletonData>,

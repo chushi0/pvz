@@ -162,6 +162,13 @@ pub(crate) struct PlantTag {
     pub metadata: Arc<PlantInfo>,
 }
 
+// 植物血量变化动画
+#[derive(Component, Default)]
+pub(crate) struct PlantHpAnim {
+    pub trigger_damage_1: bool,
+    pub trigger_damage_2: bool,
+}
+
 // 在展示 level progress ui 时，位置左移
 #[derive(Component)]
 pub(crate) struct ShowLevelProgressShiftLeft;

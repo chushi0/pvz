@@ -80,6 +80,7 @@
         <Render>
             <Atlas>reanim-spine/wall_nut.atlas</Atlas>
             <Skeleton>reanim-spine/wall_nut.skel</Skeleton>
+            <DamageSkin>true</DamageSkin>
         </Render>
     </Plant>
 </Plants>

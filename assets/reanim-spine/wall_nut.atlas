@@ -1,0 +1,16 @@
+wall_nut.png
+size:301,90
+filter:Linear,Linear
+pma:true
+Wallnut_body
+bounds:2,2,86,100
+offsets:8,0,100,100
+rotate:90
+Wallnut_cracked1
+bounds:104,2,86,99
+offsets:8,0,100,100
+rotate:90
+Wallnut_cracked2
+bounds:205,2,86,94
+offsets:8,0,100,100
+rotate:90

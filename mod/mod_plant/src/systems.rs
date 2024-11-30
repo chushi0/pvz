@@ -5,15 +5,17 @@ use bevy::{
 };
 use bevy_spine::prelude::*;
 use consts::anim::{
-    INDEX_PLANT_INSTANT, INDEX_PLANT_PRODUCE, INDEX_PLANT_SHOOT, NAME_PLANT_INSTANT,
+    INDEX_PLANT_DAMAGE_1, INDEX_PLANT_DAMAGE_2, INDEX_PLANT_INSTANT, INDEX_PLANT_PRODUCE,
+    INDEX_PLANT_SHOOT, NAME_PLANT_DAMAGE_1, NAME_PLANT_DAMAGE_2, NAME_PLANT_INSTANT,
     NAME_PLANT_PRODUCE, NAME_PLANT_SHOOT,
 };
 use fw_actor::oneshot_anim;
 use fw_cursor::CursorPosition;
 
 use crate::components::{
-    AnimPlantInstantTag, AnimPlantProduceTag, AnimPlantShootTag, CooldownOverlay, PlantCooldown,
-    PlantMetaData, PlantSeed, PlantUsable, SeedHover, UnusedOverlay,
+    AnimPlantDamage1Tag, AnimPlantDamage2Tag, AnimPlantInstantTag, AnimPlantProduceTag,
+    AnimPlantShootTag, CooldownOverlay, PlantCooldown, PlantMetaData, PlantSeed, PlantUsable,
+    SeedHover, UnusedOverlay,
 };
 
 #[allow(clippy::type_complexity)]
@@ -242,4 +244,18 @@ oneshot_anim!(
     start_instant_anim,
     INDEX_PLANT_INSTANT,
     NAME_PLANT_INSTANT
+);
+
+oneshot_anim!(
+    AnimPlantDamage1Tag,
+    start_damage1_anim,
+    INDEX_PLANT_DAMAGE_1,
+    NAME_PLANT_DAMAGE_1
+);
+
+oneshot_anim!(
+    AnimPlantDamage2Tag,
+    start_damage2_anim,
+    INDEX_PLANT_DAMAGE_2,
+    NAME_PLANT_DAMAGE_2
 );

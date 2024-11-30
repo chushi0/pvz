@@ -142,6 +142,7 @@ impl Plugin for SceneGamePlugin {
                             update::update_plant_instant_timer,
                             update::apply_effect_explode,
                             update::apply_cherry_bomb_particle,
+                            update::update_plant_hp_anim,
                         ),
                         // 僵尸逻辑
                         (

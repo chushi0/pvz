@@ -17,8 +17,9 @@ use fw_ftxm::FtxmAudioSink;
 use mod_level::{CurrentLevel, LevelBackground, LevelType, Reward, SodType, WaveType, Zombie};
 use mod_plant::{
     components::{
-        AnimPlantInstantTag, AnimPlantProduceTag, AnimPlantShootTag, PlantBundle, PlantCooldown,
-        PlantHp, PlantMetaData, PlantSeed, PlantSeedBundle, PlantUsable, SeedHover,
+        AnimPlantDamage1Tag, AnimPlantDamage2Tag, AnimPlantInstantTag, AnimPlantProduceTag,
+        AnimPlantShootTag, PlantBundle, PlantCooldown, PlantHp, PlantMetaData, PlantSeed,
+        PlantSeedBundle, PlantUsable, SeedHover,
     },
     metadata::{
         InstantEffectType, Particle, PlantDetect, PlantPosition, PlantRegistry, PlantType,
@@ -45,11 +46,11 @@ use crate::{
         GameTimerTag, GameUiTag, ImageCutAnim, InvincibleTag, LanePosition, LevelProgressFlagTag,
         LevelProgressHeadTag, LevelProgressProgressTag, MaterialColorAnim, MoveAcceleration,
         MoveTimer, MoveVelocity, NaturalSunshineSolt, NaturalSunshineTag, PickSeed, PickableSeed,
-        PlantInstantTag, PlantProduceTag, PlantShootTag, PlantSolt, PlantTag, ProjectileCooldown,
-        ProjectileTag, RewardSolt, RewardTag, SceneTag, SeedChooserTag, SeedTransformInChooserBox,
-        SeedbankTag, ShowLevelProgressShiftLeft, SoltType, StartGameButtonTag, SunshineTag,
-        SunshineText, ToDespawn, ToSpawnZombie, ZombieAttackableTag, ZombieCriticalTag,
-        ZombieEatTag, ZombieHpAnim, ZombieSolt, ZombieTag,
+        PlantHpAnim, PlantInstantTag, PlantProduceTag, PlantShootTag, PlantSolt, PlantTag,
+        ProjectileCooldown, ProjectileTag, RewardSolt, RewardTag, SceneTag, SeedChooserTag,
+        SeedTransformInChooserBox, SeedbankTag, ShowLevelProgressShiftLeft, SoltType,
+        StartGameButtonTag, SunshineTag, SunshineText, ToDespawn, ToSpawnZombie,
+        ZombieAttackableTag, ZombieCriticalTag, ZombieEatTag, ZombieHpAnim, ZombieSolt, ZombieTag,
     },
     GameState, Sunshine,
 };
@@ -1289,6 +1290,10 @@ pub(crate) fn plant_seed(
         if let Some(se) = &instant.enter_sound {
             spawn_se(&mut commands, &asset_server, se.to_owned());
         }
+    }
+    // 植物血量皮肤
+    if plant_info.render.damage_skin {
+        commands.entity(plant_entity).insert(PlantHpAnim::default());
     }
     *solt_position = Some(plant_entity);
 
@@ -3199,5 +3204,21 @@ pub(crate) fn apply_cherry_bomb_particle(
             ToDespawn(Timer::new(Duration::from_secs_f32(0.5), TimerMode::Once)),
             SceneTag,
         ));
+    }
+}
+
+pub(crate) fn update_plant_hp_anim(
+    mut commands: Commands,
+    mut plants: Query<(Entity, &PlantHp, &mut PlantHpAnim, &PlantTag)>,
+) {
+    for (entity, hp, mut hp_anim, plant) in &mut plants {
+        if hp.0 <= plant.metadata.hp * 2.0 / 3.0 && !hp_anim.trigger_damage_1 {
+            commands.entity(entity).insert(AnimPlantDamage1Tag);
+            hp_anim.trigger_damage_1 = true;
+        }
+        if hp.0 <= plant.metadata.hp / 3.0 && !hp_anim.trigger_damage_2 {
+            commands.entity(entity).insert(AnimPlantDamage2Tag);
+            hp_anim.trigger_damage_2 = true;
+        }
     }
 }

@@ -4,6 +4,8 @@ pub mod anim {
     pub const INDEX_PLANT_SHOOT: usize = 11;
     pub const INDEX_PLANT_PRODUCE: usize = 12;
     pub const INDEX_PLANT_INSTANT: usize = 13;
+    pub const INDEX_PLANT_DAMAGE_1: usize = 14;
+    pub const INDEX_PLANT_DAMAGE_2: usize = 15;
     pub const INDEX_ZOMBIE_MOVE: usize = 11;
     pub const INDEX_ZOMBIE_EAT: usize = 13;
     pub const INDEX_ZOMBIE_EAT_STOP: usize = 12;
@@ -20,6 +22,8 @@ pub mod anim {
     pub const NAME_PLANT_SHOOT: &str = "shoot";
     pub const NAME_PLANT_PRODUCE: &str = "produce";
     pub const NAME_PLANT_INSTANT: &str = "instant";
+    pub const NAME_PLANT_DAMAGE_1: &str = "damage_1";
+    pub const NAME_PLANT_DAMAGE_2: &str = "damage_2";
     pub const NAME_ZOMBIE_MOVE: &str = "move";
     pub const NAME_ZOMBIE_EAT: &str = "eat";
     pub const NAME_ZOMBIE_EAT_STOP: &str = "eat_stop";

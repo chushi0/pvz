@@ -107,4 +107,56 @@
             <Zombie count="4">Basic</Zombie>
         </Wave>
     </Level>
+    <Level>
+        <LevelType>
+            <Adventure level="4" />
+        </LevelType>
+        <Name>关卡 1-4</Name>
+        <Background>
+            <Day type="SodRow3" upgrade="true" />
+        </Background>
+        <Sunshine>50</Sunshine>
+        <NatureSunshine>true</NatureSunshine>
+        <FirstWaveTime>30</FirstWaveTime>
+        <Reward>
+            <Plant type="WallNut" />
+        </Reward>
+        <PreviewZombie count="7">Basic</PreviewZombie>
+        <PreviewZombie count="4">Conehead</PreviewZombie>
+        <Wave>
+            <Zombie>Basic</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie>Basic</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie>Basic</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie>Conehead</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie>Conehead</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie>Conehead</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie>Conehead</Zombie>
+            <Zombie>Basic</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie>Conehead</Zombie>
+            <Zombie>Basic</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie>Conehead</Zombie>
+            <Zombie>Basic</Zombie>
+        </Wave>
+        <Wave type="HugeWave">
+            <Zombie>Flag</Zombie>
+            <Zombie count="2">Conehead</Zombie>
+            <Zombie count="5">Basic</Zombie>
+        </Wave>
+    </Level>
 </Levels>

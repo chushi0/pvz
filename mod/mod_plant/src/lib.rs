@@ -30,6 +30,8 @@ impl Plugin for ModPlantPlugin {
                     systems::start_shoot_anim,
                     systems::start_produce_anim,
                     systems::start_instant_anim,
+                    systems::start_damage1_anim,
+                    systems::start_damage2_anim,
                 ),
             );
     }
