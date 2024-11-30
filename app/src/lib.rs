@@ -35,6 +35,7 @@ pub fn main() {
         .add_plugins(mod_level::ModLevelPlugin)
         .add_plugins(mod_userdata::ModUserdataPlugin)
         .add_plugins(scene_base::SceneBasePlugin)
+        .add_plugins(scene_splash::SceneSplashPlugin)
         .add_plugins(scene_title::SceneTitlePlugin)
         .add_plugins(scene_game::SceneGamePlugin)
         .run();

@@ -15,6 +15,7 @@ mod_userdata = {path = "../mod/mod_userdata"}
 mod_zombie = {path = "../mod/mod_zombie"}
 scene_base = {path = "../scene/scene_base"}
 scene_game = {path = "../scene/scene_game"}
+scene_splash = {path = "../scene/scene_splash"}
 scene_title = {path = "../scene/scene_title"}
 
 bevy = {version = "0.14.2", features = ["jpeg"]}

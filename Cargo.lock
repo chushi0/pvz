@@ -189,6 +189,7 @@ dependencies = [
  "mod_zombie",
  "scene_base",
  "scene_game",
+ "scene_splash",
  "scene_title",
  "zune-jpeg 0.5.0-rc2",
 ]
@@ -3481,10 +3482,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "scene_splash"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "fw_anim",
+ "fw_button",
+ "fw_ftxm",
+ "scene_base",
+]
+
+[[package]]
 name = "scene_title"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "fw_ftxm",
  "mod_level",
  "mod_userdata",
  "scene_base",

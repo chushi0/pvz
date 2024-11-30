@@ -13,7 +13,7 @@ members = [
   "mod/mod_userdata",
   "mod/mod_zombie",
   "scene/scene_base",
-  "scene/scene_game",
+  "scene/scene_game", "scene/scene_splash",
   "scene/scene_title",
 ]
 resolver = "2"
