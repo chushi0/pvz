@@ -3497,6 +3497,8 @@ name = "scene_title"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "fw_anim",
+ "fw_button",
  "fw_ftxm",
  "mod_level",
  "mod_userdata",

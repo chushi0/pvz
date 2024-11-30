@@ -222,7 +222,7 @@ pub(crate) fn setup_load_bar(mut commands: Commands, asset_server: Res<AssetServ
     let entity = commands
         .spawn((
             ButtonBundle {
-                hotspot: ButtonHotspot(vec![Rect {
+                hotspot: ButtonHotspot::Rects(vec![Rect {
                     min: Vec2 { x: -160., y: -26.0 },
                     max: Vec2 { x: 160., y: 26.0 },
                 }]),

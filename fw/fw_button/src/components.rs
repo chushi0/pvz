@@ -5,7 +5,12 @@ pub struct Button;
 
 // 点击热区
 #[derive(Component, Default)]
-pub struct ButtonHotspot(pub Vec<Rect>);
+pub enum ButtonHotspot {
+    #[default]
+    None,
+    Rects(Vec<Rect>),
+    Polygon(Vec<Vec2>),
+}
 
 // 交互
 #[derive(Component, Default)]
@@ -31,7 +36,7 @@ pub struct ButtonBackground {
     pub disabled: Handle<Image>,
 }
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Clone, Copy)]
 pub enum ButtonEnabled {
     #[default]
     Enabled,
@@ -50,6 +55,31 @@ pub struct ButtonBundle {
 
 impl ButtonHotspot {
     pub fn contains(&self, point: Vec2) -> bool {
-        self.0.iter().any(|rect| rect.contains(point))
+        match self {
+            ButtonHotspot::None => false,
+            ButtonHotspot::Rects(vec) => vec.iter().any(|rect| rect.contains(point)),
+            ButtonHotspot::Polygon(vec) => {
+                // From tabnine:
+                // 此算法基于 "点在多边形内的射线穿越测试"，
+                // 它通过检查点是否在多边形的每条边的左侧来确定点是否在多边形内。
+                // 如果点穿越了奇数个边，则点在多边形内。
+                let mut c = false;
+                let nvert = vec.len();
+                let mut j = nvert - 1;
+
+                for i in 0..nvert {
+                    let vi = vec[i];
+                    let vj = vec[j];
+
+                    if ((vi.y > point.y) != (vj.y > point.y))
+                        && (point.x < (vj.x - vi.x) * (point.y - vi.y) / (vj.y - vi.y) + vi.x)
+                    {
+                        c = !c;
+                    }
+                    j = i;
+                }
+                c
+            }
+        }
     }
 }

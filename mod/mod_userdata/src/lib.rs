@@ -15,6 +15,9 @@ pub struct UserData {
     pub plant_solt_count: usize,
     pub pass_adventure_count: u32,
     pub adventure_progress: u32,
+    pub unlock_minigame: bool,
+    pub unlock_puzzle: bool,
+    pub unlock_survial: bool,
 }
 
 impl Default for UserData {
@@ -24,6 +27,9 @@ impl Default for UserData {
             plant_solt_count: 6,
             pass_adventure_count: 0,
             adventure_progress: 1,
+            unlock_minigame: false,
+            unlock_puzzle: false,
+            unlock_survial: false,
         }
     }
 }

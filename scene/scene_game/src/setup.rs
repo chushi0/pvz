@@ -695,7 +695,7 @@ pub(crate) fn setup_seed_chooser(
                                     transform: Transform::from_xyz(232.0, 513.0 - 475.0, 0.01),
                                     ..Default::default()
                                 },
-                                hotspot: ButtonHotspot(vec![Rect {
+                                hotspot: ButtonHotspot::Rects(vec![Rect {
                                     min: Vec2 { x: -78.0, y: -21.0 },
                                     max: Vec2 { x: 78.0, y: 21.0 },
                                 }]),

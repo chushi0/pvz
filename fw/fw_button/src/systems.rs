@@ -20,24 +20,30 @@ pub(crate) fn update_interaction(
     buttons
         .par_iter_mut()
         .for_each(|(mut interaction, disabled, transform, hotspot)| {
-            let translation = transform.translation();
-            let in_range = hotspot.contains(Vec2 {
-                x: cursor_position.x - translation.x,
-                y: cursor_position.y - translation.y,
-            });
-
             *interaction = match disabled {
                 ButtonEnabled::Disabled => ButtonInteraction::None,
                 ButtonEnabled::Enabled => {
+                    let translation = transform.translation();
+                    let in_range = hotspot.contains(Vec2 {
+                        x: cursor_position.x - translation.x,
+                        y: cursor_position.y - translation.y,
+                    });
                     match (&*interaction, in_range, just_pressed, just_released) {
                         (ButtonInteraction::None | ButtonInteraction::Click, false, _, _) => {
                             ButtonInteraction::None
                         }
-                        (ButtonInteraction::None | ButtonInteraction::Click, true, _, _) => {
+                        (ButtonInteraction::None | ButtonInteraction::Click, true, false, _) => {
                             ButtonInteraction::Hover
                         }
+                        (ButtonInteraction::None | ButtonInteraction::Click, true, true, false) => {
+                            ButtonInteraction::Pressed
+                        }
+                        (ButtonInteraction::None | ButtonInteraction::Click, true, true, true) => {
+                            ButtonInteraction::Click
+                        }
                         (ButtonInteraction::Hover, true, false, _) => ButtonInteraction::Hover,
-                        (ButtonInteraction::Hover, true, true, _) => ButtonInteraction::Pressed,
+                        (ButtonInteraction::Hover, true, true, false) => ButtonInteraction::Pressed,
+                        (ButtonInteraction::Hover, true, true, true) => ButtonInteraction::Click,
                         (ButtonInteraction::Hover, false, _, _) => ButtonInteraction::None,
                         (ButtonInteraction::Pressed, true, _, false) => ButtonInteraction::Pressed,
                         (ButtonInteraction::Pressed, true, _, true) => ButtonInteraction::Click,
