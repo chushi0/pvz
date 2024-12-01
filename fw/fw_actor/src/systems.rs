@@ -31,7 +31,7 @@ macro_rules! looping_anim {
         ) {
             for (entity, mut spine) in &mut targets {
                 $crate::play_anim!(spine, $index, $name, true, 0.0);
-                commands.entity(entity).insert(<$inner_tag>::default());
+                commands.entity(entity).try_insert(<$inner_tag>::default());
             }
         }
 

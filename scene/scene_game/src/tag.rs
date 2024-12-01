@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashSet};
 use mod_plant::metadata::PlantInfo;
 use mod_zombie::metadata::ZombieType;
 
@@ -267,6 +267,13 @@ pub(crate) struct ProjectileTag;
 #[derive(Component)]
 pub(crate) struct MoveVelocity(pub Vec2);
 
+// 旋转
+#[derive(Component)]
+pub(crate) struct RotateTag {
+    pub speed: f32,
+    pub angle: f32,
+}
+
 // 移动加速度
 #[derive(Component)]
 pub(crate) struct MoveAcceleration(pub Vec2);
@@ -400,6 +407,15 @@ pub(crate) struct MoveTimer(pub Timer);
 
 #[derive(Component)]
 pub(crate) struct CherryBombParticleTag;
+
+#[derive(Component)]
+pub(crate) struct RemoveOutrangeTag;
+
+#[derive(Component)]
+pub(crate) struct BowlingHitZombieMemory(pub HashSet<Entity>);
+
+#[derive(Component)]
+pub(crate) struct BowlingHitCooldown(pub f32);
 
 impl PlantSolt {
     // 按默认僵尸啃食顺序返回植物

@@ -1,0 +1,7 @@
+explode_nut.png
+size:90,104
+filter:Linear,Linear
+pma:true
+Wallnut_body
+bounds:2,2,86,100
+offsets:8,0,100,100

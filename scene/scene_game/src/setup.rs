@@ -10,7 +10,7 @@ use fw_actor::components::AnimStandbyTag;
 use fw_anim::{AnimationBundle, AnimationClip, AnimationClips, CustomAnimationTrigger, KeyFrame};
 use fw_button::components::{ButtonBackground, ButtonBundle, ButtonHotspot};
 use fw_ftxm::{FtxmSource, MainMusicTable};
-use mod_level::{CurrentLevel, LevelBackground, Music, SodType, Zombie};
+use mod_level::{CurrentLevel, LevelBackground, Music, SodType, SpecialRule, Zombie};
 use mod_plant::{
     components::{PlantSeed, PlantSeedBundle, PlantUsable},
     metadata::{PlantRegistry, PlantType},
@@ -110,6 +110,18 @@ pub(crate) fn setup_background(
         ));
     }
 
+    // 保龄球模式
+    if matches!(current_level.special_rule, Some(SpecialRule::Bowling)) {
+        commands.spawn((
+            SpriteBundle {
+                texture: asset_server.load("images/Wallnut_bowlingstripe.png"),
+                transform: Transform::from_xyz(497.0 - 620.0, -16.0, 0.1),
+                ..Default::default()
+            },
+            SceneTag,
+        ));
+    }
+
     // 白天无草皮之地
     if let LevelBackground::Day { sod_type, .. } = &current_level.background {
         if let Some(image) = match sod_type {
@@ -138,6 +150,12 @@ pub(crate) fn setup_background(
 }
 
 pub(crate) fn setup_plant_solt(mut commands: Commands, current_level: Res<CurrentLevel>) {
+    // 坚果保龄球模式中，只能种在左侧三列
+    let count_each_lane = match current_level.special_rule {
+        Some(SpecialRule::Bowling) => 3,
+        _ => 9,
+    };
+
     match &current_level.background {
         LevelBackground::Day {
             sod_type,
@@ -150,7 +168,7 @@ pub(crate) fn setup_plant_solt(mut commands: Commands, current_level: Res<Curren
                 (SodType::SodRow5, _) | (SodType::SodRow3, true) => vec![0, 1, 2, 3, 4],
             };
             lane.into_iter().for_each(|lane| {
-                for i in 0..9 {
+                for i in 0..count_each_lane {
                     commands.spawn((
                         PlantSolt::default(),
                         Transform::from_xyz(
@@ -170,7 +188,7 @@ pub(crate) fn setup_plant_solt(mut commands: Commands, current_level: Res<Curren
         }
         LevelBackground::Night => {
             for lane in 0..5 {
-                for i in 0..9 {
+                for i in 0..count_each_lane {
                     commands.spawn((
                         PlantSolt::default(),
                         Transform::from_xyz(
@@ -200,7 +218,7 @@ pub(crate) fn setup_plant_solt(mut commands: Commands, current_level: Res<Curren
             .into_iter()
             .enumerate()
             {
-                for i in 0..9 {
+                for i in 0..count_each_lane {
                     commands.spawn((
                         PlantSolt {
                             solt_type,
@@ -224,7 +242,7 @@ pub(crate) fn setup_plant_solt(mut commands: Commands, current_level: Res<Curren
         }
         LevelBackground::Roof | LevelBackground::RoofNight => {
             for lane in 0..5 {
-                for i in 0..9 {
+                for i in 0..count_each_lane {
                     commands.spawn((
                         PlantSolt {
                             solt_type: SoltType::Roof,

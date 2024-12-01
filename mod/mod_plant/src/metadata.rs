@@ -151,6 +151,16 @@ pub struct PlantInfo {
     pub produce: Option<PlantProduce>,
     #[serde(rename = "Instant")]
     pub instant: Option<PlantInstant>,
+    #[serde(rename = "Bowling")]
+    #[serde(default)]
+    pub bowling: Option<PlantBowling>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PlantBowling {
+    #[serde(rename = "Explode")]
+    #[serde(default)]
+    pub explode_range: Option<f32>,
 }
 
 #[derive(Debug, Deserialize)]

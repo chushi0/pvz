@@ -5,6 +5,7 @@ use resource::{Sunshine, ZombieWaveController};
 use scene_base::GameScene;
 use tag::{PlantTag, ZombieAttackableTag};
 
+mod particle;
 mod resource;
 mod setup;
 mod tag;
@@ -142,7 +143,7 @@ impl Plugin for SceneGamePlugin {
                             update::update_zombie_eat,
                             update::update_plant_instant_timer,
                             update::apply_effect_explode,
-                            update::apply_cherry_bomb_particle,
+                            particle::apply_cherry_bomb_particle,
                             update::update_plant_hp_anim,
                             update::provide_conveyor_belt_plant,
                         ),
@@ -180,12 +181,20 @@ impl Plugin for SceneGamePlugin {
                     (
                         update::update_velocity,
                         update::update_movement,
+                        update::update_rotation,
                         update::check_remove_movement,
                         update::despawn_schedule_entity,
                         update::update_lane_position,
-                        update::remove_outrange_projectile,
+                        update::remove_outrange_entities,
                         update::update_conveyor_belt_anim,
                         update::update_conveyor_belt_seed_positiont,
+                        (
+                            update::bowling_plant_detach,
+                            update::bowling_plant_insert_movetag,
+                            update::bowling_plant_hit,
+                            update::bowling_change_velocity,
+                        )
+                            .run_if(update::predicate_bowling),
                     )
                         .run_if(in_state(GameState::Main).or_else(in_state(GameState::Exit))),
                 )

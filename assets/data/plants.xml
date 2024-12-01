@@ -89,5 +89,8 @@
             <Atlas>reanim-spine/explode_nut.atlas</Atlas>
             <Skeleton>reanim-spine/explode_nut.skel</Skeleton>
         </Render>
+        <Bowling>
+            <Explode>130</Explode>
+        </Bowling>
     </Plant>
 </Plants>

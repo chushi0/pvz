@@ -1,7 +1,8 @@
-use std::{any::TypeId, ops::Range, time::Duration};
+use std::{any::TypeId, time::Duration};
 
 use bevy::{
     asset::AssetPath, audio::PlaybackMode, ecs::system::SystemId, prelude::*, sprite::Anchor,
+    utils::hashbrown::HashSet,
 };
 use bevy_spatial::{kdtree::KDTree2, SpatialAccess};
 use bevy_spine::{SkeletonData, Spine, SpineBundle};
@@ -15,7 +16,9 @@ use fw_button::components::{Button, ButtonEnabled, ButtonInteraction};
 use fw_cursor::CursorPosition;
 use fw_ftxm::FtxmAudioSink;
 use mod_item::{ItemRegistry, ItemType};
-use mod_level::{CurrentLevel, LevelBackground, LevelType, Reward, SodType, WaveType, Zombie};
+use mod_level::{
+    CurrentLevel, LevelBackground, LevelType, Reward, SodType, SpecialRule, WaveType, Zombie,
+};
 use mod_plant::{
     components::{
         AnimPlantDamage1Tag, AnimPlantDamage2Tag, AnimPlantInstantTag, AnimPlantProduceTag,
@@ -42,16 +45,17 @@ use scene_base::GameScene;
 use crate::{
     resource::ZombieWaveController,
     tag::{
-        BootCleanerCar, CherryBombParticleTag, ChooseableSeedTag, CleanerCar, ColorAlphaFade,
-        ConveyorBeltAnimTag, ConveyorBeltSeedTag, ConveyorBeltSolt, ConveyorBeltTag, DelayShow,
-        ExplodeEffectTag, FollowCameraTag, FollowCursorTag, Freeze, GameTimer, GameTimerTag,
-        GameUiTag, ImageCutAnim, InvincibleTag, LanePosition, LevelProgressFlagTag,
-        LevelProgressHeadTag, LevelProgressProgressTag, MaterialColorAnim, MoveAcceleration,
-        MoveTimer, MoveVelocity, NaturalSunshineSolt, NaturalSunshineTag, OnetimeSeedTag, PickSeed,
-        PickableSeed, PlantHpAnim, PlantInstantTag, PlantProduceTag, PlantShootTag, PlantSolt,
-        PlantTag, ProjectileCooldown, ProjectileTag, RewardSolt, RewardTag, SceneTag,
-        SeedChooserTag, SeedTransformInChooserBox, SeedbankTag, ShowLevelProgressShiftLeft,
-        SoltType, StartGameButtonTag, SunshineTag, SunshineText, ToDespawn, ToSpawnZombie,
+        BootCleanerCar, BowlingHitCooldown, BowlingHitZombieMemory, CherryBombParticleTag,
+        ChooseableSeedTag, CleanerCar, ColorAlphaFade, ConveyorBeltAnimTag, ConveyorBeltSeedTag,
+        ConveyorBeltSolt, ConveyorBeltTag, DelayShow, ExplodeEffectTag, FollowCameraTag,
+        FollowCursorTag, Freeze, GameTimer, GameTimerTag, GameUiTag, ImageCutAnim, InvincibleTag,
+        LanePosition, LevelProgressFlagTag, LevelProgressHeadTag, LevelProgressProgressTag,
+        MaterialColorAnim, MoveAcceleration, MoveTimer, MoveVelocity, NaturalSunshineSolt,
+        NaturalSunshineTag, OnetimeSeedTag, PickSeed, PickableSeed, PlantHpAnim, PlantInstantTag,
+        PlantProduceTag, PlantShootTag, PlantSolt, PlantTag, ProjectileCooldown, ProjectileTag,
+        RemoveOutrangeTag, RewardSolt, RewardTag, RotateTag, SceneTag, SeedChooserTag,
+        SeedTransformInChooserBox, SeedbankTag, ShowLevelProgressShiftLeft, SoltType,
+        StartGameButtonTag, SunshineTag, SunshineText, ToDespawn, ToSpawnZombie,
         ZombieAttackableTag, ZombieCriticalTag, ZombieEatTag, ZombieHpAnim, ZombieSolt, ZombieTag,
     },
     GameState, Sunshine,
@@ -1469,6 +1473,7 @@ pub(crate) fn plant_shoot(
                 },
                 SceneTag,
                 ProjectileTag,
+                RemoveOutrangeTag,
                 Freeze,
                 DelayShow {
                     timer: Timer::new(
@@ -1546,6 +1551,20 @@ pub(crate) fn update_movement(
     });
 }
 
+// 更新实体旋转
+pub(crate) fn update_rotation(
+    time: Res<Time>,
+    mut targets: Query<(&mut RotateTag, &mut Transform), Without<Freeze>>,
+) {
+    let delta = time.delta().as_secs_f32();
+    targets
+        .par_iter_mut()
+        .for_each(|(mut rotate, ref mut transform)| {
+            rotate.angle += rotate.speed * delta;
+            transform.rotation = Quat::from_rotation_z(rotate.angle);
+        });
+}
+
 // 僵尸进入啃食状态
 #[allow(clippy::type_complexity)]
 pub(crate) fn check_zombie_eat_start(
@@ -1561,7 +1580,13 @@ pub(crate) fn check_zombie_eat_start(
     plant_kdtree: Res<KDTree2<PlantTag>>,
     plant_tag: Query<&PlantTag>,
     plant_solt: Query<&PlantSolt>,
+    current_level: Res<CurrentLevel>,
 ) {
+    // 坚果保龄球模式不吃植物
+    if matches!(current_level.special_rule, Some(SpecialRule::Bowling)) {
+        return;
+    }
+
     for (zombie_entity, zombie_transform) in &mut zombie {
         // 僵尸位置
         let translation = zombie_transform.translation();
@@ -1891,12 +1916,12 @@ pub(crate) fn update_plant_shoot_enable(
         });
 }
 
-// 移除超出范围的投掷物
-pub(crate) fn remove_outrange_projectile(
+// 移除超出范围的实体
+pub(crate) fn remove_outrange_entities(
     mut commands: Commands,
-    projectiles: Query<(Entity, &GlobalTransform), With<ProjectileTag>>,
+    targets: Query<(Entity, &GlobalTransform), With<RemoveOutrangeTag>>,
 ) {
-    for (entity, transform) in &projectiles {
+    for (entity, transform) in &targets {
         let translation = transform.translation();
         let position = Vec2 {
             x: translation.x,
@@ -3226,116 +3251,6 @@ pub(crate) fn apply_effect_explode(
     }
 }
 
-// 樱桃炸弹粒子效果
-pub(crate) fn apply_cherry_bomb_particle(
-    mut commands: Commands,
-    particle: Query<(Entity, &GlobalTransform), With<CherryBombParticleTag>>,
-    asset_server: Res<AssetServer>,
-) {
-    if particle.is_empty() {
-        return;
-    }
-
-    let cloud = asset_server.load("particles/ExplosionCloud.png");
-    let powie = asset_server.load("particles/ExplosionPowie.png");
-
-    let mut rng = thread_rng();
-    for (entity, transform) in &particle {
-        commands.entity(entity).despawn_recursive();
-        let translation = transform.translation();
-
-        let mut gen_particle = |translation: Vec3, scale: f32, color: Color, range: Range<f32>| {
-            let start_transform = Transform::from_scale(Vec3::ONE * scale).with_translation(Vec3 {
-                x: translation.x,
-                y: translation.y,
-                z: 40.0,
-            });
-            let end_transform = Transform::from_scale(Vec3::ONE * scale).with_translation(Vec3 {
-                x: translation.x + rng.gen_range(range.clone()),
-                y: translation.y + rng.gen_range(range),
-                z: 40.0,
-            });
-
-            let mut entity = commands.spawn((
-                SpriteBundle {
-                    sprite: Sprite {
-                        color,
-                        ..Default::default()
-                    },
-                    texture: cloud.clone(),
-                    transform: start_transform,
-                    ..Default::default()
-                },
-                SceneTag,
-                ColorAlphaFade,
-                CustomAnimationTrigger::default(),
-            ));
-            let entity_id = entity.id();
-            entity.insert(AnimationBundle {
-                animation_clips: AnimationClips(vec![AnimationClip {
-                    entity: entity_id,
-                    keyframes: vec![
-                        KeyFrame {
-                            time: Duration::ZERO,
-                            transform: Some(start_transform),
-                            custom_animation_triggers: Some(
-                                [(TypeId::of::<ColorAlphaFade>(), 1.0)]
-                                    .into_iter()
-                                    .collect(),
-                            ),
-                        },
-                        KeyFrame {
-                            time: Duration::from_secs_f32(0.25),
-                            transform: Some(
-                                Transform::from_scale(Vec3::ONE * scale).with_translation(
-                                    (start_transform.translation + end_transform.translation) * 0.5,
-                                ),
-                            ),
-                            custom_animation_triggers: Some(
-                                [(TypeId::of::<ColorAlphaFade>(), 1.0)]
-                                    .into_iter()
-                                    .collect(),
-                            ),
-                        },
-                        KeyFrame {
-                            time: Duration::from_secs_f32(0.5),
-                            transform: Some(end_transform),
-                            custom_animation_triggers: Some(
-                                [(TypeId::of::<ColorAlphaFade>(), 0.0)]
-                                    .into_iter()
-                                    .collect(),
-                            ),
-                        },
-                    ],
-                }]),
-                ..Default::default()
-            });
-        };
-
-        for _ in 0..10 {
-            gen_particle(translation, 0.5, Color::srgb(0.9, 0.4, 0.0), -130.0..130.0);
-        }
-
-        for _ in 0..10 {
-            gen_particle(translation, 1.5, Color::srgb(0.9, 0.6, 0.0), -80.0..80.0);
-        }
-
-        commands.spawn((
-            SpriteBundle {
-                texture: powie.clone(),
-                transform: Transform::from_translation(Vec3 {
-                    x: translation.x,
-                    y: translation.y,
-                    z: 40.1,
-                }),
-                ..Default::default()
-            },
-            ToDespawn(Timer::new(Duration::from_secs_f32(0.5), TimerMode::Once)),
-            SceneTag,
-        ));
-    }
-}
-
 pub(crate) fn update_plant_hp_anim(
     mut commands: Commands,
     mut plants: Query<(Entity, &PlantHp, &mut PlantHpAnim, &PlantTag)>,
@@ -3452,5 +3367,202 @@ pub(crate) fn update_conveyor_belt_seed_positiont(
             .translation
             .x
             .max(-300.0 + 7.0 + 25.0 + 50.0 * i as f32);
+    }
+}
+
+pub(crate) fn predicate_bowling(current_level: Res<CurrentLevel>) -> bool {
+    matches!(current_level.special_rule, Some(SpecialRule::Bowling))
+}
+
+pub(crate) fn bowling_plant_detach(mut plant_solt: Query<&mut PlantSolt>) {
+    plant_solt.par_iter_mut().for_each(|mut solt| {
+        solt.primary = None;
+    });
+}
+
+pub(crate) fn bowling_plant_insert_movetag(
+    mut commands: Commands,
+    mut plant: Query<(Entity, &mut Transform, &PlantTag), (With<PlantTag>, Without<Parent>)>,
+    asset_server: Res<AssetServer>,
+) {
+    for (entity, mut transform, plant) in &mut plant {
+        let parent = commands
+            .spawn((
+                Transform::from_xyz(
+                    transform.translation.x,
+                    transform.translation.y + 30.0,
+                    transform.translation.z,
+                )
+                .with_scale(transform.scale),
+                GlobalTransform::default(),
+                InheritedVisibility::default(),
+                ViewVisibility::default(),
+                Visibility::default(),
+                SceneTag,
+                RemoveOutrangeTag,
+                MoveVelocity(Vec2 { x: 200.0, y: 0.0 }),
+                RotateTag {
+                    speed: -6.0,
+                    angle: 0.0,
+                },
+                BowlingHitZombieMemory(HashSet::default()),
+                BowlingHitCooldown(0.0),
+                PlantMetaData(plant.metadata.clone()),
+            ))
+            .id();
+
+        commands
+            .entity(entity)
+            .set_parent(parent)
+            .remove::<SceneTag>();
+
+        *transform = Transform::from_xyz(0.0, -30.0, 0.0);
+
+        spawn_se(&mut commands, &asset_server, "sounds/bowling.ogg");
+    }
+}
+
+pub(crate) fn bowling_plant_hit(
+    mut commands: Commands,
+    mut zombies: Query<&mut ZombieHp, With<ZombieAttackableTag>>,
+    mut bowlings: Query<(
+        Entity,
+        &mut BowlingHitZombieMemory,
+        &mut BowlingHitCooldown,
+        &GlobalTransform,
+        &mut MoveVelocity,
+        &PlantMetaData,
+    )>,
+    zombie_kdtree: Res<KDTree2<ZombieAttackableTag>>,
+    time: Res<Time>,
+    asset_server: Res<AssetServer>,
+) {
+    for (entity, mut memory, mut cooldown, transform, mut velocity, metadata) in &mut bowlings {
+        // cd
+        if cooldown.0 > 0.0 {
+            cooldown.0 -= time.delta().as_secs_f32();
+            continue;
+        }
+
+        // 保龄球位置
+        let translation = transform.translation();
+        let position = Vec2 {
+            x: translation.x,
+            y: translation.y,
+        };
+
+        // 最近的僵尸
+        let Some((zombie_position, Some(zombie_entity))) = zombie_kdtree
+            .k_nearest_neighbour(position, memory.0.len() + 1)
+            .into_iter()
+            .filter(|(_, entity)| {
+                entity
+                    .clone()
+                    .map(|entity| !memory.0.contains(&entity))
+                    .unwrap_or(false)
+            })
+            .next()
+        else {
+            continue;
+        };
+
+        // 僵尸碰撞箱
+        let zombie_collision = Rect {
+            min: zombie_position - Vec2 { x: 31.0, y: -14.0 },
+            max: zombie_position + Vec2 { x: 15.0, y: 45.0 },
+        };
+
+        // 碰撞检测
+        if !zombie_collision.contains(position) {
+            continue;
+        }
+
+        // 僵尸信息
+        let Ok(mut zombie_hp) = zombies.get_mut(zombie_entity) else {
+            continue;
+        };
+
+        // 爆炸？
+        if let Some(radius) = metadata
+            .0
+            .bowling
+            .as_ref()
+            .and_then(|bowling| bowling.explode_range)
+        {
+            let transform = Transform::from_xyz(translation.x, translation.y - 30.0, translation.z);
+
+            // 爆炸效果
+            commands.spawn((
+                transform,
+                GlobalTransform::default(),
+                SceneTag,
+                ExplodeEffectTag {
+                    radius,
+                    damage: 1800.0,
+                },
+            ));
+
+            // 爆炸粒子
+            commands.spawn((
+                transform,
+                GlobalTransform::default(),
+                SceneTag,
+                CherryBombParticleTag,
+            ));
+
+            // 爆炸音效
+            spawn_se(&mut commands, &asset_server, "sounds/cherrybomb.ogg");
+
+            // 移除自身
+            commands.entity(entity).despawn_recursive();
+            continue;
+        }
+
+        // 造成伤害
+        zombie_hp.damage(400.0);
+
+        // 受击动画
+        commands.entity(zombie_entity).insert(AnimHitTag);
+
+        // 记忆僵尸信息
+        memory.0.insert(zombie_entity);
+
+        // 改变移动方向
+        if velocity.0.y.abs() <= 0.01 {
+            velocity.0.y = *[200.0, -200.0].choose(&mut thread_rng()).unwrap();
+        } else {
+            velocity.0.y = -velocity.0.y;
+        }
+
+        // cd
+        cooldown.0 = 0.2;
+
+        // se
+        spawn_se(
+            &mut commands,
+            &asset_server,
+            *["sounds/bowlingimpact.ogg", "sounds/bowlingimpact2.ogg"]
+                .choose(&mut thread_rng())
+                .unwrap(),
+        );
+    }
+}
+
+pub(crate) fn bowling_change_velocity(
+    mut bowlings: Query<(&GlobalTransform, &mut MoveVelocity), With<BowlingHitZombieMemory>>,
+) {
+    for (transform, mut velocity) in &mut bowlings {
+        if velocity.0.y.abs() < 0.01 {
+            continue;
+        }
+
+        let translation = transform.translation();
+
+        if translation.y > 300.0 - 87.0 {
+            velocity.0.y = -200.0;
+        }
+        if translation.y < 300.0 - 563.0 {
+            velocity.0.y = 200.0;
+        }
     }
 }
