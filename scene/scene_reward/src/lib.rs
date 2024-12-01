@@ -18,7 +18,7 @@ impl Plugin for SceneRewardPlugin {
                 setup::setup_background,
                 setup::setup_text,
                 setup::setup_fadein,
-                setup::setup_plant_info,
+                setup::setup_reward_info,
                 setup::setup_conform_button,
                 setup::setup_back_to_title_button,
             ),

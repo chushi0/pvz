@@ -7,7 +7,7 @@ members = [
   "fw/fw_anim",
   "fw/fw_button",
   "fw/fw_cursor",
-  "fw/fw_ftxm", "fw/fw_transition",
+  "fw/fw_ftxm", "fw/fw_transition", "mod/mod_item",
   "mod/mod_level",
   "mod/mod_plant",
   "mod/mod_userdata",

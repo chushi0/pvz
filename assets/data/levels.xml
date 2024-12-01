@@ -119,7 +119,7 @@
         <NatureSunshine>true</NatureSunshine>
         <FirstWaveTime>30</FirstWaveTime>
         <Reward>
-            <Plant type="WallNut" />
+            <Item type="Shovel" />
         </Reward>
         <PreviewZombie count="7">Basic</PreviewZombie>
         <PreviewZombie count="4">Conehead</PreviewZombie>

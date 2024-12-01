@@ -18,6 +18,11 @@ pub struct UserData {
     pub unlock_minigame: bool,
     pub unlock_puzzle: bool,
     pub unlock_survial: bool,
+    pub unlock_shovel: bool,
+    pub unlock_almanac: bool,
+    pub unlock_shop: bool,
+    pub unlock_shop_taco_upgrade: bool,
+    pub unlock_zen_garden: bool,
 }
 
 impl Default for UserData {
@@ -30,6 +35,11 @@ impl Default for UserData {
             unlock_minigame: false,
             unlock_puzzle: false,
             unlock_survial: false,
+            unlock_shovel: false,
+            unlock_almanac: false,
+            unlock_shop: false,
+            unlock_shop_taco_upgrade: false,
+            unlock_zen_garden: false,
         }
     }
 }

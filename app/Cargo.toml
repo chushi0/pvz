@@ -9,6 +9,7 @@ fw_anim = {path = "../fw/fw_anim"}
 fw_button = {path = "../fw/fw_button"}
 fw_cursor = {path = "../fw/fw_cursor"}
 fw_ftxm = {path = "../fw/fw_ftxm"}
+mod_item = {path = "../mod/mod_item"}
 mod_level = {path = "../mod/mod_level"}
 mod_plant = {path = "../mod/mod_plant"}
 mod_userdata = {path = "../mod/mod_userdata"}

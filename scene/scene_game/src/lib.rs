@@ -124,7 +124,7 @@ impl Plugin for SceneGamePlugin {
                                 update::plant_seed,
                                 update::collect_sunshine,
                                 update::input_pick_seed,
-                                update::input_pick_reward_seed,
+                                update::input_pick_reward,
                             )
                                 .chain(),
                             update::cancel_pick_seed,

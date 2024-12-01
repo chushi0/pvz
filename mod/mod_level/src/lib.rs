@@ -1,6 +1,7 @@
 use std::{fs::File, ops::Deref, sync::Arc};
 
 use bevy::{prelude::*, utils::HashMap};
+use mod_item::ItemType;
 use mod_plant::metadata::PlantType;
 use mod_zombie::metadata::ZombieType;
 use serde::Deserialize;
@@ -155,6 +156,14 @@ pub enum Reward {
     Plant {
         #[serde(rename = "type")]
         plant: PlantType,
+    },
+    Item {
+        #[serde(rename = "type")]
+        item: ItemType,
+    },
+    Note {
+        #[serde(rename = "path")]
+        note_path: String,
     },
 }
 

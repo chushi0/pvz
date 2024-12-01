@@ -183,6 +183,7 @@ dependencies = [
  "fw_button",
  "fw_cursor",
  "fw_ftxm",
+ "mod_item",
  "mod_level",
  "mod_plant",
  "mod_userdata",
@@ -2541,10 +2542,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e53debba6bda7a793e5f99b8dacf19e626084f525f7829104ba9898f367d85ff"
 
 [[package]]
+name = "mod_item"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "serde",
+ "serde-xml-rs",
+]
+
+[[package]]
 name = "mod_level"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "mod_item",
  "mod_plant",
  "mod_zombie",
  "serde",
@@ -3483,6 +3494,7 @@ dependencies = [
  "fw_cursor",
  "fw_ftxm",
  "fw_transition",
+ "mod_item",
  "mod_level",
  "mod_plant",
  "mod_userdata",
@@ -3499,6 +3511,7 @@ dependencies = [
  "fw_anim",
  "fw_button",
  "fw_ftxm",
+ "mod_item",
  "mod_level",
  "mod_plant",
  "scene_base",

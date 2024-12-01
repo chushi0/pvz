@@ -9,6 +9,7 @@ use bevy::{
 use fw_anim::{AnimationBundle, AnimationClip, AnimationClips, CustomAnimationTrigger, KeyFrame};
 use fw_button::components::{ButtonBackground, ButtonBundle, ButtonHotspot};
 use fw_ftxm::{FtxmSource, MainMusicTable};
+use mod_item::ItemRegistry;
 use mod_level::{CurrentLevel, Reward};
 use mod_plant::{components::PlantSeedBundle, metadata::PlantRegistry};
 
@@ -52,13 +53,30 @@ pub(crate) fn setup_background(mut commands: Commands, asset_server: Res<AssetSe
     ));
 }
 
-pub(crate) fn setup_text(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub(crate) fn setup_text(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    item_registry: Res<ItemRegistry>,
+    current_level: Res<CurrentLevel>,
+) {
+    let text = match &current_level.reward {
+        Some(Reward::Plant { plant: _ }) => "你得到一株新植物！".to_owned(),
+        Some(Reward::Item { item }) => {
+            let Some(item_info) = item_registry.get(item) else {
+                return;
+            };
+            item_info.title.clone()
+        }
+        Some(Reward::Note { note_path: _ }) => return,
+        None => return,
+    };
+
     let font = asset_server.load("font/fzcgbk.ttf");
     commands.spawn((
         Text2dBundle {
             text: Text {
                 sections: vec![TextSection {
-                    value: "你得到一株新植物！".to_owned(),
+                    value: text,
                     style: TextStyle {
                         font,
                         color: Color::srgb(0.8, 0.5, 0.2),
@@ -124,23 +142,45 @@ pub(crate) fn setup_fadein(
     ));
 }
 
-pub(crate) fn setup_plant_info(
+pub(crate) fn setup_reward_info(
     mut commands: Commands,
     current_level: Res<CurrentLevel>,
     plant_registry: Res<PlantRegistry>,
+    item_registry: Res<ItemRegistry>,
     asset_server: Res<AssetServer>,
 ) {
-    let Some(Reward::Plant { plant }) = current_level.reward else {
-        return;
-    };
+    let (name, description) = match &current_level.reward {
+        Some(Reward::Plant { plant }) => {
+            let Some(plant_info) = plant_registry.get(plant) else {
+                return;
+            };
 
-    let Some(plant_info) = plant_registry.get(&plant) else {
-        return;
-    };
+            let mut plant_bundle = PlantSeedBundle::new(plant_info.clone());
+            plant_bundle.transform =
+                Transform::from_xyz(0.0, 100.0, 1.0).with_scale(Vec3::ONE * 2.);
+            commands.spawn((plant_bundle, SceneTag));
 
-    let mut plant_bundle = PlantSeedBundle::new(plant_info.clone());
-    plant_bundle.transform = Transform::from_xyz(0.0, 100.0, 1.0).with_scale(Vec3::ONE * 2.);
-    commands.spawn((plant_bundle, SceneTag));
+            (plant_info.name.clone(), plant_info.description.clone())
+        }
+        Some(Reward::Item { item }) => {
+            let Some(item_info) = item_registry.get(item) else {
+                return;
+            };
+
+            commands.spawn((
+                SpriteBundle {
+                    texture: asset_server.load(item_info.texture.clone()),
+                    transform: Transform::from_xyz(0.0, 100.0, 1.0).with_scale(Vec3::ONE * 2.),
+                    ..Default::default()
+                },
+                SceneTag,
+            ));
+
+            (item_info.name.clone(), item_info.description.clone())
+        }
+        Some(Reward::Note { note_path: _ }) => return,
+        None => return,
+    };
 
     let font = asset_server.load("font/fzcgbk.ttf");
 
@@ -148,7 +188,7 @@ pub(crate) fn setup_plant_info(
         Text2dBundle {
             text: Text {
                 sections: vec![TextSection {
-                    value: plant_info.name.clone(),
+                    value: name,
                     style: TextStyle {
                         font: font.clone(),
                         color: Color::srgb(0.8, 0.5, 0.2),
@@ -167,7 +207,7 @@ pub(crate) fn setup_plant_info(
         Text2dBundle {
             text: Text {
                 sections: vec![TextSection {
-                    value: plant_info.description.clone(),
+                    value: description,
                     style: TextStyle {
                         font,
                         color: Color::srgb(0.2, 0.5, 0.8),

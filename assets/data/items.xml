@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Items>
+    <Item id="Shovel">
+        <Texture>images/Shovel.png</Texture>
+        <Title>你得到一把铁铲！</Title>
+        <Name>铁铲</Name>
+        <Description>让你挖出一株植物，以便给其它植物腾出空间。</Description>
+    </Item>
+    <Item id="Almanac">
+        <Texture>images/Almanac.png</Texture>
+        <Title>你发现了图鉴！</Title>
+        <Name>图鉴</Name>
+        <Description>记载所有你遇到的植物和僵尸。</Description>
+    </Item>
+    <Item id="Key">
+        <Texture>images/CarKeys.png</Texture>
+        <Title>你发现了疯狂戴夫的车钥匙！</Title>
+        <Name>疯狂戴夫的车钥匙</Name>
+        <Description>现在你可以访问疯狂戴夫的商店！</Description>
+    </Item>
+    <Item id="Taco">
+        <Texture>images/Taco.png</Texture>
+        <Title>你发现了一个玉米卷！</Title>
+        <Name>玉米卷</Name>
+        <Description>你准备拿这个玉米卷做什么呢？</Description>
+    </Item>
+    <Item id="WateringCan">
+        <Texture>images/WateringCan.png</Texture>
+        <Title>你发现了一个水壶！</Title>
+        <Name>水壶</Name>
+        <Description>现在你可以玩“禅镜花园”模式！</Description>
+    </Item>
+</Items>

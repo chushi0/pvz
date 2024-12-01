@@ -14,6 +14,7 @@ use fw_anim::{AnimationBundle, AnimationClip, AnimationClips, CustomAnimationTri
 use fw_button::components::{Button, ButtonEnabled, ButtonInteraction};
 use fw_cursor::CursorPosition;
 use fw_ftxm::FtxmAudioSink;
+use mod_item::{ItemRegistry, ItemType};
 use mod_level::{CurrentLevel, LevelBackground, LevelType, Reward, SodType, WaveType, Zombie};
 use mod_plant::{
     components::{
@@ -845,6 +846,24 @@ fn trigger_finish(
         Some(Reward::Plant { plant }) => {
             userdata.unlock_plugins.insert(plant);
         }
+        Some(Reward::Item { item }) => match item {
+            ItemType::Shovel => {
+                userdata.unlock_shovel = true;
+            }
+            ItemType::Almanac => {
+                userdata.unlock_almanac = true;
+            }
+            ItemType::Key => {
+                userdata.unlock_shop = true;
+            }
+            ItemType::Taco => {
+                userdata.unlock_shop_taco_upgrade = true;
+            }
+            ItemType::WateringCan => {
+                userdata.unlock_zen_garden = true;
+            }
+        },
+        Some(Reward::Note { note_path: _ }) => {}
         None => {}
     }
 
@@ -2537,7 +2556,9 @@ pub(crate) fn check_summon_reward(
             With<ToSpawnZombie>,
         )>,
     >,
+    asset_server: Res<AssetServer>,
     plant_registry: Res<PlantRegistry>,
+    item_registry: Res<ItemRegistry>,
 ) {
     // 必须存在奖励槽
     let Some((reward_solt_entity, reward_solt_transform)) = reward_solt.iter().next() else {
@@ -2583,7 +2604,7 @@ pub(crate) fn check_summon_reward(
     );
 
     // 生成奖励
-    match current_level.reward {
+    match &current_level.reward {
         Some(Reward::Plant { plant }) => commands
             .spawn((
                 PlantSeedBundle {
@@ -2592,7 +2613,43 @@ pub(crate) fn check_summon_reward(
                         y: reward_start_translation.y,
                         z: 60.0,
                     }),
-                    ..PlantSeedBundle::new(plant_registry.get(&plant).unwrap().clone())
+                    ..PlantSeedBundle::new(plant_registry.get(plant).unwrap().clone())
+                },
+                RewardTag,
+                SceneTag,
+                MoveVelocity(initial_velocity),
+                MoveAcceleration(Vec2 { x: 0.0, y: -1000.0 }),
+                MoveTimer(Timer::new(Duration::from_secs_f32(1.0), TimerMode::Once)),
+            ))
+            .id(),
+        Some(Reward::Item { item }) => commands
+            .spawn((
+                SpriteBundle {
+                    texture: asset_server.load(item_registry.get(item).unwrap().texture.clone()),
+                    transform: Transform::from_translation(Vec3 {
+                        x: reward_start_translation.x,
+                        y: reward_start_translation.y,
+                        z: 60.0,
+                    }),
+                    ..Default::default()
+                },
+                RewardTag,
+                SceneTag,
+                MoveVelocity(initial_velocity),
+                MoveAcceleration(Vec2 { x: 0.0, y: -1000.0 }),
+                MoveTimer(Timer::new(Duration::from_secs_f32(1.0), TimerMode::Once)),
+            ))
+            .id(),
+        Some(Reward::Note { note_path }) => commands
+            .spawn((
+                SpriteBundle {
+                    texture: asset_server.load(note_path.clone()),
+                    transform: Transform::from_translation(Vec3 {
+                        x: reward_start_translation.x,
+                        y: reward_start_translation.y,
+                        z: 60.0,
+                    }),
+                    ..Default::default()
                 },
                 RewardTag,
                 SceneTag,
@@ -2617,8 +2674,9 @@ fn calculate_throw_initial_velocity(start: Vec2, end: Vec2, gravity: f32, time: 
     Vec2 { x, y }
 }
 
-pub(crate) fn input_pick_reward_seed(
-    seed: Query<&SeedHover, (With<PlantSeed>, With<RewardTag>)>,
+pub(crate) fn input_pick_reward(
+    reward: Query<&GlobalTransform, With<RewardTag>>,
+    cursor_position: Res<CursorPosition>,
     mut mouse_button_input: ResMut<ButtonInput<MouseButton>>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
@@ -2627,8 +2685,22 @@ pub(crate) fn input_pick_reward_seed(
         return;
     }
 
-    // 点击的种子卡
-    let Some(_) = seed.iter().find(|hover| matches!(hover, SeedHover::Hover)) else {
+    // 点击的奖励
+    let Some(_) = reward.iter().find(|transform| {
+        let translation = transform.translation();
+        let rect = Rect {
+            min: Vec2 {
+                x: translation.x - 25.,
+                y: translation.y - 35.,
+            },
+            max: Vec2 {
+                x: translation.x + 25.,
+                y: translation.y + 35.,
+            },
+        };
+
+        rect.contains(cursor_position.world_position)
+    }) else {
         return;
     };
 
