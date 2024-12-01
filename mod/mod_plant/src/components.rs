@@ -52,6 +52,13 @@ pub enum SeedHover {
     Hover,
 }
 
+#[derive(Component, Default)]
+pub enum SunshineVisibility {
+    #[default]
+    Visible,
+    Hidden,
+}
+
 #[derive(Component)]
 pub struct AnimPlantShootTag;
 
@@ -75,6 +82,9 @@ pub struct PlantSeedBundle {
     pub cooldown: PlantCooldown,
     // 是否可以使用
     pub usable: PlantUsable,
+
+    // 展示阳光数
+    pub sunshine_visibility: SunshineVisibility,
 
     pub plant_seed: PlantSeed,
     pub transform: Transform,
@@ -107,6 +117,7 @@ impl PlantSeedBundle {
             cooldown: PlantCooldown::Ready,
             usable: PlantUsable::Usable,
             plant_seed: PlantSeed,
+            sunshine_visibility: SunshineVisibility::Visible,
             transform: Transform::default(),
             global_transform: GlobalTransform::default(),
             visibility: Visibility::default(),

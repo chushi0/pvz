@@ -26,6 +26,8 @@ pub(crate) enum GameTimerTag {
 
     // 植物包
     FadeInSeedBank,
+    // 传送带
+    FadeInConveyorBelt,
     // 选植物
     FadeInSeedChooser,
     FadeOutSeedChooser,
@@ -86,6 +88,33 @@ pub(crate) struct ColorAlphaFade;
 // 顶部种子栏标记
 #[derive(Component)]
 pub(crate) struct SeedbankTag;
+
+// 传送带标记
+#[derive(Component)]
+pub(crate) struct ConveyorBeltTag;
+
+// 一次性植物种子
+#[derive(Component)]
+pub(crate) struct OnetimeSeedTag;
+
+// 传送带种子
+#[derive(Component)]
+pub(crate) struct ConveyorBeltSeedTag;
+
+// 传动带底部动图
+#[derive(Component)]
+pub(crate) struct ConveyorBeltAnimTag {
+    pub index: u32,
+    pub timer: Timer,
+}
+
+// 传送带刷植物位置
+#[derive(Component)]
+pub(crate) struct ConveyorBeltSolt {
+    // 固定刷
+    pub fixed_index: usize,
+    pub timer: Timer,
+}
 
 // 选卡栏
 #[derive(Component)]

@@ -20,7 +20,7 @@ use mod_plant::{
     components::{
         AnimPlantDamage1Tag, AnimPlantDamage2Tag, AnimPlantInstantTag, AnimPlantProduceTag,
         AnimPlantShootTag, PlantBundle, PlantCooldown, PlantHp, PlantMetaData, PlantSeed,
-        PlantSeedBundle, PlantUsable, SeedHover,
+        PlantSeedBundle, PlantUsable, SeedHover, SunshineVisibility,
     },
     metadata::{
         InstantEffectType, Particle, PlantDetect, PlantPosition, PlantRegistry, PlantType,
@@ -43,14 +43,15 @@ use crate::{
     resource::ZombieWaveController,
     tag::{
         BootCleanerCar, CherryBombParticleTag, ChooseableSeedTag, CleanerCar, ColorAlphaFade,
-        DelayShow, ExplodeEffectTag, FollowCameraTag, FollowCursorTag, Freeze, GameTimer,
-        GameTimerTag, GameUiTag, ImageCutAnim, InvincibleTag, LanePosition, LevelProgressFlagTag,
+        ConveyorBeltAnimTag, ConveyorBeltSeedTag, ConveyorBeltSolt, ConveyorBeltTag, DelayShow,
+        ExplodeEffectTag, FollowCameraTag, FollowCursorTag, Freeze, GameTimer, GameTimerTag,
+        GameUiTag, ImageCutAnim, InvincibleTag, LanePosition, LevelProgressFlagTag,
         LevelProgressHeadTag, LevelProgressProgressTag, MaterialColorAnim, MoveAcceleration,
-        MoveTimer, MoveVelocity, NaturalSunshineSolt, NaturalSunshineTag, PickSeed, PickableSeed,
-        PlantHpAnim, PlantInstantTag, PlantProduceTag, PlantShootTag, PlantSolt, PlantTag,
-        ProjectileCooldown, ProjectileTag, RewardSolt, RewardTag, SceneTag, SeedChooserTag,
-        SeedTransformInChooserBox, SeedbankTag, ShowLevelProgressShiftLeft, SoltType,
-        StartGameButtonTag, SunshineTag, SunshineText, ToDespawn, ToSpawnZombie,
+        MoveTimer, MoveVelocity, NaturalSunshineSolt, NaturalSunshineTag, OnetimeSeedTag, PickSeed,
+        PickableSeed, PlantHpAnim, PlantInstantTag, PlantProduceTag, PlantShootTag, PlantSolt,
+        PlantTag, ProjectileCooldown, ProjectileTag, RewardSolt, RewardTag, SceneTag,
+        SeedChooserTag, SeedTransformInChooserBox, SeedbankTag, ShowLevelProgressShiftLeft,
+        SoltType, StartGameButtonTag, SunshineTag, SunshineText, ToDespawn, ToSpawnZombie,
         ZombieAttackableTag, ZombieCriticalTag, ZombieEatTag, ZombieHpAnim, ZombieSolt, ZombieTag,
     },
     GameState, Sunshine,
@@ -61,6 +62,7 @@ pub(crate) struct UpdateTimerSystem {
     move_camera_to_center: SystemId,
     move_camera_to_left: SystemId,
     fade_in_seed_bank: SystemId,
+    fade_in_conveyor_belt: SystemId,
     fade_in_cars: SystemId,
     fade_in_seed_chooser: SystemId,
     fade_out_seed_chooser: SystemId,
@@ -101,6 +103,7 @@ pub(crate) fn update_timer(
             move_camera_to_center: commands.register_one_shot_system(trigger_move_camera_to_center),
             move_camera_to_left: commands.register_one_shot_system(trigger_move_camera_to_left),
             fade_in_seed_bank: commands.register_one_shot_system(trigger_fade_in_seed_bank),
+            fade_in_conveyor_belt: commands.register_one_shot_system(trigger_fade_in_conveyor_belt),
             fade_in_cars: commands.register_one_shot_system(trigger_fade_in_cars),
             fade_in_seed_chooser: commands.register_one_shot_system(trigger_fade_in_seed_chooser),
             fade_out_seed_chooser: commands.register_one_shot_system(trigger_fade_out_seed_chooser),
@@ -149,6 +152,7 @@ pub(crate) fn update_timer(
             GameTimerTag::CameraToCenterAnim => timer_trigger.move_camera_to_center,
             GameTimerTag::CameraToLeftAnim => timer_trigger.move_camera_to_left,
             GameTimerTag::FadeInSeedBank => timer_trigger.fade_in_seed_bank,
+            GameTimerTag::FadeInConveyorBelt => timer_trigger.fade_in_conveyor_belt,
             GameTimerTag::FadeInCars => timer_trigger.fade_in_cars,
             GameTimerTag::FadeInSeedChooser => timer_trigger.fade_in_seed_chooser,
             GameTimerTag::FadeOutSeedChooser => timer_trigger.fade_out_seed_chooser,
@@ -208,6 +212,48 @@ fn trigger_move_camera_to_left(
 fn trigger_fade_in_seed_bank(
     mut commands: Commands,
     mut seedbank: Query<(Entity, &mut Visibility, &Transform), With<SeedbankTag>>,
+) {
+    let mut clips = Vec::new();
+    for (entity, mut visibility, transform) in &mut seedbank {
+        // 防止多次fadein
+        if matches!(*visibility, Visibility::Inherited) {
+            continue;
+        }
+
+        *visibility = Visibility::Inherited;
+        clips.push(AnimationClip {
+            entity,
+            keyframes: vec![
+                KeyFrame {
+                    time: Duration::ZERO,
+                    transform: Some(Transform::from_xyz(
+                        transform.translation.x,
+                        transform.translation.y + 100.,
+                        transform.translation.z,
+                    )),
+                    ..Default::default()
+                },
+                KeyFrame {
+                    time: Duration::from_secs_f32(0.2),
+                    transform: Some(*transform),
+                    ..Default::default()
+                },
+            ],
+        });
+    }
+
+    commands.spawn((
+        AnimationBundle {
+            animation_clips: AnimationClips(clips),
+            ..Default::default()
+        },
+        SceneTag,
+    ));
+}
+
+fn trigger_fade_in_conveyor_belt(
+    mut commands: Commands,
+    mut seedbank: Query<(Entity, &mut Visibility, &Transform), With<ConveyorBeltTag>>,
 ) {
     let mut clips = Vec::new();
     for (entity, mut visibility, transform) in &mut seedbank {
@@ -1056,6 +1102,7 @@ pub(crate) fn input_pick_seed(
             &PlantCooldown,
             &PlantUsable,
             &SeedHover,
+            Option<&OnetimeSeedTag>,
         ),
         (With<PlantSeed>, With<PickableSeed>),
     >,
@@ -1069,9 +1116,9 @@ pub(crate) fn input_pick_seed(
     }
 
     // 点击的种子卡
-    let Some((entity, PlantMetaData(metadata), cooldown, usable, _)) = seed
+    let Some((entity, PlantMetaData(metadata), cooldown, usable, _, onetime)) = seed
         .iter()
-        .find(|(_, _, _, _, hover)| matches!(hover, SeedHover::Hover))
+        .find(|(_, _, _, _, hover, _)| matches!(hover, SeedHover::Hover))
     else {
         return;
     };
@@ -1095,9 +1142,11 @@ pub(crate) fn input_pick_seed(
     // 1. 阳光是否足够
     // 2. 是否已经冷却
     // 3. 其他原因不可使用
-    let can_use_plant = sunshine.0 >= metadata.sunshine
+    // 4. 一次性植物固定可用
+    let can_use_plant = (sunshine.0 >= metadata.sunshine
         && matches!(cooldown, PlantCooldown::Ready)
-        && matches!(usable, PlantUsable::Usable);
+        && matches!(usable, PlantUsable::Usable))
+        || onetime.is_some();
 
     // 无法使用植物
     if !can_use_plant {
@@ -1157,7 +1206,10 @@ pub(crate) fn plant_seed(
     mut commands: Commands,
     mut solts: Query<(Entity, &mut PlantSolt, &GlobalTransform, &LanePosition)>,
     pick_seed: Query<(Entity, &PickSeed)>,
-    mut seeds: Query<&mut PlantCooldown, (With<PlantSeed>, With<PickableSeed>)>,
+    mut seeds: Query<
+        (Entity, &mut PlantCooldown, Option<&OnetimeSeedTag>),
+        (With<PlantSeed>, With<PickableSeed>),
+    >,
     cursor_position: Res<CursorPosition>,
     mut mouse_button_input: ResMut<ButtonInput<MouseButton>>,
     plants: Query<&PlantMetaData>,
@@ -1316,12 +1368,17 @@ pub(crate) fn plant_seed(
     }
     *solt_position = Some(plant_entity);
 
-    // 扣除阳光
-    sunshine.0 -= plant_info.sunshine;
+    if let Ok((entity, mut cooldown, onetime)) = seeds.get_mut(*seed) {
+        // 如果是一次性植物，则移除
+        if onetime.is_some() {
+            commands.entity(entity).despawn_recursive();
+        } else {
+            // 扣除阳光
+            sunshine.0 -= plant_info.sunshine;
 
-    // 种子重新装填
-    if let Ok(mut cooldown) = seeds.get_mut(*seed) {
-        *cooldown = PlantCooldown::Cooldown(Duration::from_secs_f32(plant_info.cooldown));
+            // 种子重新装填
+            *cooldown = PlantCooldown::Cooldown(Duration::from_secs_f32(plant_info.cooldown));
+        }
     }
 
     // 音效
@@ -2301,7 +2358,7 @@ pub(crate) fn check_plant_seed_usable(
     sunshine: Res<Sunshine>,
     mut seeds: Query<
         (&mut PlantUsable, &PlantMetaData, &PlantCooldown),
-        (With<PlantSeed>, With<PickableSeed>),
+        (With<PlantSeed>, With<PickableSeed>, Without<OnetimeSeedTag>),
     >,
 ) {
     seeds
@@ -3292,5 +3349,108 @@ pub(crate) fn update_plant_hp_anim(
             commands.entity(entity).insert(AnimPlantDamage2Tag);
             hp_anim.trigger_damage_2 = true;
         }
+    }
+}
+
+// 传送带动画
+pub(crate) fn update_conveyor_belt_anim(
+    time: Res<Time>,
+    mut belt: Query<(&mut Sprite, &mut ConveyorBeltAnimTag)>,
+) {
+    for (mut sprite, mut anim) in &mut belt {
+        anim.timer.tick(time.delta());
+        if !anim.timer.just_finished() {
+            continue;
+        }
+
+        anim.index = (anim.index + anim.timer.times_finished_this_tick()) % 6;
+
+        let Some(rect) = &mut sprite.rect else {
+            continue;
+        };
+
+        rect.min.y = anim.index as f32 * 16.0;
+        rect.max.y = anim.index as f32 * 16.0 + 16.0;
+    }
+}
+
+// 传送带提供植物
+pub(crate) fn provide_conveyor_belt_plant(
+    mut commands: Commands,
+    time: Res<Time>,
+    current_level: Res<CurrentLevel>,
+    plant_registry: Res<PlantRegistry>,
+    mut solt: Query<(&GlobalTransform, &mut ConveyorBeltSolt)>,
+    seeds: Query<(), With<ConveyorBeltSeedTag>>,
+) {
+    let Some(conveyor_belt) = &current_level.conveyor_belt else {
+        return;
+    };
+
+    let mut rng = thread_rng();
+
+    for (transform, mut belt_solt) in &mut solt {
+        // 计时器
+        belt_solt.timer.tick(time.delta());
+        if !belt_solt.timer.just_finished() {
+            continue;
+        }
+
+        // 如果传送带已经满了，则不再生成
+        if seeds.iter().count() >= 10 {
+            debug!("skip provide plant because of full");
+            continue;
+        }
+
+        // 随机植物
+        let plant_type = if belt_solt.fixed_index < conveyor_belt.fixed_plants.len() {
+            belt_solt.fixed_index += 1;
+            conveyor_belt.fixed_plants[belt_solt.fixed_index - 1]
+        } else {
+            conveyor_belt
+                .plant_pools
+                .choose_weighted(&mut rng, |plant| plant.weight)
+                .unwrap()
+                .plant
+        };
+        debug!("provide plant: {:?}", plant_type);
+
+        // 生成
+        let translation = transform.translation();
+        let mut plant_seed_bundle =
+            PlantSeedBundle::new(plant_registry.get(&plant_type).unwrap().clone());
+        plant_seed_bundle.sunshine_visibility = SunshineVisibility::Hidden;
+        plant_seed_bundle.transform = Transform::from_translation(translation);
+        commands.spawn((
+            plant_seed_bundle,
+            PickableSeed,
+            SceneTag,
+            OnetimeSeedTag,
+            ConveyorBeltSeedTag,
+        ));
+    }
+}
+
+// 更新传送带种子位置
+pub(crate) fn update_conveyor_belt_seed_positiont(
+    time: Res<Time>,
+    mut targets: Query<&mut Transform, (With<ConveyorBeltSeedTag>, Without<Freeze>)>,
+) {
+    if targets.is_empty() {
+        return;
+    }
+    let delta = time.delta().as_secs_f32();
+
+    // 整理后排序
+    let mut seeds = targets.iter_mut().collect::<Vec<_>>();
+    seeds.sort_by(|t1, t2| t1.translation.x.partial_cmp(&t2.translation.x).unwrap());
+
+    // 按顺序更新
+    for (i, ref mut transform) in seeds.into_iter().enumerate() {
+        transform.translation.x -= delta * 30.0;
+        transform.translation.x = transform
+            .translation
+            .x
+            .max(-300.0 + 7.0 + 25.0 + 50.0 * i as f32);
     }
 }

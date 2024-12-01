@@ -126,12 +126,16 @@ pub struct PlantInfo {
     #[serde(rename = "Name")]
     pub name: String,
     #[serde(rename = "Description")]
+    #[serde(default)]
     pub description: String,
     #[serde(rename = "Sunshine")]
+    #[serde(default)]
     pub sunshine: u32,
     #[serde(rename = "Cooldown")]
+    #[serde(default)]
     pub cooldown: f32,
     #[serde(rename = "Hp")]
+    #[serde(default = "default_plant_hp")]
     pub hp: f32,
     #[serde(rename = "Render")]
     pub render: PlantRender,
@@ -366,4 +370,8 @@ const fn f32_infinity() -> f32 {
 
 const fn default_explode_damage() -> f32 {
     1800.
+}
+
+const fn default_plant_hp() -> f32 {
+    200.
 }

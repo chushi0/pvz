@@ -83,4 +83,11 @@
             <DamageSkin>true</DamageSkin>
         </Render>
     </Plant>
+    <Plant id="ExplodeNut">
+        <Name>爆炸坚果</Name>
+        <Render>
+            <Atlas>reanim-spine/explode_nut.atlas</Atlas>
+            <Skeleton>reanim-spine/explode_nut.skel</Skeleton>
+        </Render>
+    </Plant>
 </Plants>

@@ -46,6 +46,7 @@ impl Plugin for SceneGamePlugin {
                     setup::setup_plant_solt,
                     setup::setup_zombie_solt,
                     setup::setup_seedbank,
+                    setup::setup_conveyor_belt,
                     setup::setup_seed_chooser,
                     setup::setup_cleanup_car,
                     setup::setup_standby_zombie,
@@ -143,6 +144,7 @@ impl Plugin for SceneGamePlugin {
                             update::apply_effect_explode,
                             update::apply_cherry_bomb_particle,
                             update::update_plant_hp_anim,
+                            update::provide_conveyor_belt_plant,
                         ),
                         // 僵尸逻辑
                         (
@@ -182,6 +184,8 @@ impl Plugin for SceneGamePlugin {
                         update::despawn_schedule_entity,
                         update::update_lane_position,
                         update::remove_outrange_projectile,
+                        update::update_conveyor_belt_anim,
+                        update::update_conveyor_belt_seed_positiont,
                     )
                         .run_if(in_state(GameState::Main).or_else(in_state(GameState::Exit))),
                 )

@@ -89,6 +89,15 @@ pub struct Level {
     pub first_wave_time: f32,
     #[serde(rename = "Reward")]
     pub reward: Option<Reward>,
+    #[serde(rename = "ConveyorBelt")]
+    #[serde(default)]
+    pub conveyor_belt: Option<ConveyorBelt>,
+    #[serde(rename = "Music")]
+    #[serde(default)]
+    pub music: Music,
+    #[serde(rename = "SpecialRule")]
+    #[serde(default)]
+    pub special_rule: Option<SpecialRule>,
     #[serde(rename = "PreviewZombie")]
     pub preview_zombies: Vec<Zombie>,
     #[serde(rename = "Wave")]
@@ -125,6 +134,38 @@ pub enum SodType {
     SodRow3,
     #[default]
     SodRow5,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ConveyorBelt {
+    // 开头固定的植物
+    #[serde(rename = "FixedPlant")]
+    #[serde(default)]
+    pub fixed_plants: Vec<PlantType>,
+    // 后续植物池
+    #[serde(rename = "Plant")]
+    pub plant_pools: Vec<BeltPlant>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct BeltPlant {
+    #[serde(rename = "$value")]
+    pub plant: PlantType,
+    pub weight: f32,
+}
+
+#[derive(Debug, Deserialize)]
+pub enum SpecialRule {
+    Bowling,
+}
+
+#[derive(Debug, Deserialize, Default)]
+pub enum Music {
+    #[default]
+    Inherited,
+    None,
+    MiniGame,
+    UltimateBattle,
 }
 
 #[derive(Debug, Deserialize)]

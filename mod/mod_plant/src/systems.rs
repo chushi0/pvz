@@ -15,14 +15,17 @@ use fw_cursor::CursorPosition;
 use crate::components::{
     AnimPlantDamage1Tag, AnimPlantDamage2Tag, AnimPlantInstantTag, AnimPlantProduceTag,
     AnimPlantShootTag, CooldownOverlay, PlantCooldown, PlantMetaData, PlantSeed, PlantUsable,
-    SeedHover, UnusedOverlay,
+    SeedHover, SunshineVisibility, UnusedOverlay,
 };
 
 #[allow(clippy::type_complexity)]
 pub(crate) fn setup_seeds(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    seeds: Query<(Entity, &PlantMetaData), (With<PlantSeed>, Without<Children>)>,
+    seeds: Query<
+        (Entity, &PlantMetaData, &SunshineVisibility),
+        (With<PlantSeed>, Without<Children>),
+    >,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut rectangle_mesh: Local<Option<Mesh2dHandle>>,
@@ -42,7 +45,7 @@ pub(crate) fn setup_seeds(
         return;
     };
 
-    for (entity, PlantMetaData(plant_info)) in &seeds {
+    for (entity, PlantMetaData(plant_info), sunshine_visibility) in &seeds {
         let seed_background = asset_server.load("images/SeedPacket_Larger.png");
         commands.entity(entity).with_children(|parent| {
             // 种子包背景
@@ -57,29 +60,31 @@ pub(crate) fn setup_seeds(
             });
 
             // 阳光文字
-            parent.spawn(Text2dBundle {
-                text: Text {
-                    sections: vec![TextSection {
-                        value: plant_info.sunshine.to_string(),
-                        style: TextStyle {
-                            font_size: 14.0,
-                            color: Color::BLACK,
-                            ..Default::default()
-                        },
-                    }],
+            if matches!(sunshine_visibility, SunshineVisibility::Visible) {
+                parent.spawn(Text2dBundle {
+                    text: Text {
+                        sections: vec![TextSection {
+                            value: plant_info.sunshine.to_string(),
+                            style: TextStyle {
+                                font_size: 14.0,
+                                color: Color::BLACK,
+                                ..Default::default()
+                            },
+                        }],
+                        ..Default::default()
+                    },
+                    text_anchor: Anchor::CenterRight,
+                    text_2d_bounds: Text2dBounds {
+                        size: Vec2 { x: 60.0, y: 18.0 },
+                    },
+                    transform: Transform::from_translation(Vec3 {
+                        x: 6.0,
+                        y: -26.0,
+                        z: 0.01,
+                    }),
                     ..Default::default()
-                },
-                text_anchor: Anchor::CenterRight,
-                text_2d_bounds: Text2dBounds {
-                    size: Vec2 { x: 60.0, y: 18.0 },
-                },
-                transform: Transform::from_translation(Vec3 {
-                    x: 6.0,
-                    y: -26.0,
-                    z: 0.01,
-                }),
-                ..Default::default()
-            });
+                });
+            }
 
             // 植物
             parent.spawn(SpineBundle {

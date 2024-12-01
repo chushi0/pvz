@@ -159,4 +159,57 @@
             <Zombie count="5">Basic</Zombie>
         </Wave>
     </Level>
+    <Level>
+        <LevelType>
+            <Adventure level="5" />
+        </LevelType>
+        <Name>关卡 1-5</Name>
+        <Background>
+            <Day />
+        </Background>
+        <FirstWaveTime>1</FirstWaveTime>
+        <NatureSunshine>false</NatureSunshine>
+        <Reward>
+            <Plant type="PeaShooter" />
+        </Reward>
+        <Music>MiniGame</Music>
+        <ConveyorBelt>
+            <Plant weight="8">WallNut</Plant>
+            <Plant weight="2">ExplodeNut</Plant>
+        </ConveyorBelt>
+        <SpecialRule>Bowling</SpecialRule>
+        <PreviewZombie count="7">Basic</PreviewZombie>
+        <PreviewZombie count="10">Conehead</PreviewZombie>
+        <Wave>
+            <Zombie count="2">Basic</Zombie>
+            <Zombie>Conehead</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie count="2">Conehead</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie count="2">Conehead</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie count="4">Basic</Zombie>
+            <Zombie count="2">Conehead</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie count="2">Basic</Zombie>
+            <Zombie count="3">Conehead</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie count="2">Basic</Zombie>
+            <Zombie count="3">Conehead</Zombie>
+        </Wave>
+        <Wave>
+            <Zombie count="2">Basic</Zombie>
+            <Zombie count="5">Conehead</Zombie>
+        </Wave>
+        <Wave type="HugeWave">
+            <Zombie>Flag</Zombie>
+            <Zombie count="6">Conehead</Zombie>
+            <Zombie count="3">Basic</Zombie>
+        </Wave>
+    </Level>
 </Levels>

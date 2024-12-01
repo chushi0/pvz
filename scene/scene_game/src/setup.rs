@@ -10,7 +10,7 @@ use fw_actor::components::AnimStandbyTag;
 use fw_anim::{AnimationBundle, AnimationClip, AnimationClips, CustomAnimationTrigger, KeyFrame};
 use fw_button::components::{ButtonBackground, ButtonBundle, ButtonHotspot};
 use fw_ftxm::{FtxmSource, MainMusicTable};
-use mod_level::{CurrentLevel, LevelBackground, SodType, Zombie};
+use mod_level::{CurrentLevel, LevelBackground, Music, SodType, Zombie};
 use mod_plant::{
     components::{PlantSeed, PlantSeedBundle, PlantUsable},
     metadata::{PlantRegistry, PlantType},
@@ -25,11 +25,11 @@ use rand::{thread_rng, Rng};
 use crate::{
     resource::{Sunshine, ZombieWaveController},
     tag::{
-        ChooseableSeedTag, CleanerCar, FollowCameraTag, GameTimer, GameTimerTag, GameUiTag,
-        LanePosition, MaterialColorAnim, NaturalSunshineSolt, PickableSeed, PlantSolt, RewardSolt,
-        RewardTag, SceneTag, SeedChooserTag, SeedTransformInChooserBox, SeedbankTag,
-        ShowLevelProgressShiftLeft, SoltType, StandbyZombieTag, StartGameButtonTag, SunshineText,
-        ZombieSolt, ZombieTag,
+        ChooseableSeedTag, CleanerCar, ConveyorBeltAnimTag, ConveyorBeltSolt, ConveyorBeltTag,
+        FollowCameraTag, GameTimer, GameTimerTag, GameUiTag, LanePosition, MaterialColorAnim,
+        NaturalSunshineSolt, PickableSeed, PlantSolt, RewardSolt, RewardTag, SceneTag,
+        SeedChooserTag, SeedTransformInChooserBox, SeedbankTag, ShowLevelProgressShiftLeft,
+        SoltType, StandbyZombieTag, StartGameButtonTag, SunshineText, ZombieSolt, ZombieTag,
     },
     GameState,
 };
@@ -77,12 +77,38 @@ pub(crate) fn setup_background(
                 anchor: Anchor::CenterLeft,
                 ..Default::default()
             },
-            texture: image,
+            texture: image.clone(),
             transform: Transform::from_xyz(-620., 0., 0.),
             ..Default::default()
         },
         SceneTag,
     ));
+
+    // 背景图在z=1.3画一小部分，挡传送带植物用
+    if current_level.conveyor_belt.is_some() {
+        commands.spawn((
+            SpriteBundle {
+                sprite: Sprite {
+                    anchor: Anchor::CenterLeft,
+                    rect: Some(Rect {
+                        min: Vec2 {
+                            x: 320.0 + 516.0,
+                            y: 0.0,
+                        },
+                        max: Vec2 {
+                            x: 320.0 + 516.0 + 70.0,
+                            y: 100.0,
+                        },
+                    }),
+                    ..Default::default()
+                },
+                texture: image,
+                transform: Transform::from_xyz(-300. + 516.0, 300. - 50.0, 1.3),
+                ..Default::default()
+            },
+            SceneTag,
+        ));
+    }
 
     // 白天无草皮之地
     if let LevelBackground::Day { sod_type, .. } = &current_level.background {
@@ -385,6 +411,78 @@ pub(crate) fn setup_seedbank(
         });
 }
 
+pub(crate) fn setup_conveyor_belt(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let backdrop = asset_server.load("images/ConveyorBelt_backdrop.png");
+    let belt = asset_server.load("images/ConveyorBelt.png");
+    // 背景
+    commands.spawn((
+        SpriteBundle {
+            sprite: Sprite {
+                anchor: Anchor::TopLeft,
+                ..Default::default()
+            },
+            texture: backdrop.clone(),
+            visibility: Visibility::Hidden,
+            transform: Transform::from_xyz(-300.0, 300.0, 1.0),
+            ..Default::default()
+        },
+        ConveyorBeltTag,
+        SceneTag,
+    ));
+    // 背景右侧边缘（遮挡植物）
+    commands.spawn((
+        SpriteBundle {
+            sprite: Sprite {
+                anchor: Anchor::TopLeft,
+                rect: Some(Rect {
+                    min: Vec2 { x: 508.0, y: 0.0 },
+                    max: Vec2 { x: 516.0, y: 86.0 },
+                }),
+                ..Default::default()
+            },
+            texture: backdrop,
+            visibility: Visibility::Hidden,
+            transform: Transform::from_xyz(-300.0 + 508., 300.0, 1.4),
+            ..Default::default()
+        },
+        ConveyorBeltTag,
+        SceneTag,
+    ));
+    // 传送带
+    commands.spawn((
+        SpriteBundle {
+            sprite: Sprite {
+                anchor: Anchor::TopLeft,
+                rect: Some(Rect {
+                    min: Vec2 { x: 0.0, y: 0.0 },
+                    max: Vec2 { x: 502., y: 16.0 },
+                }),
+                ..Default::default()
+            },
+            texture: belt,
+            visibility: Visibility::Hidden,
+            transform: Transform::from_xyz(-300.0 + 7., 300.0 - 86.0 + 16.0 + 8.0, 1.1),
+            ..Default::default()
+        },
+        ConveyorBeltTag,
+        ConveyorBeltAnimTag {
+            index: 0,
+            timer: Timer::new(Duration::from_secs_f32(1. / 30.), TimerMode::Repeating),
+        },
+        SceneTag,
+    ));
+    // 植物槽
+    commands.spawn((
+        Transform::from_xyz(-300.0 + 516.0 + 25.0, 300.0 - 86.0 + 8. + 35.0, 1.2),
+        GlobalTransform::default(),
+        ConveyorBeltSolt {
+            fixed_index: 0,
+            timer: Timer::new(Duration::from_secs_f32(3.0), TimerMode::Repeating),
+        },
+        SceneTag,
+    ));
+}
+
 pub(crate) fn setup_cleanup_car(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -493,11 +591,19 @@ pub(crate) fn setup_enter_timer(mut commands: Commands, current_level: Res<Curre
     }
 
     // 植物包、车就绪
-    commands.spawn((
-        GameTimer(Timer::from_seconds(time, TimerMode::Once)),
-        GameTimerTag::FadeInSeedBank,
-        SceneTag,
-    ));
+    if current_level.conveyor_belt.is_some() {
+        commands.spawn((
+            GameTimer(Timer::from_seconds(time, TimerMode::Once)),
+            GameTimerTag::FadeInConveyorBelt,
+            SceneTag,
+        ));
+    } else {
+        commands.spawn((
+            GameTimer(Timer::from_seconds(time, TimerMode::Once)),
+            GameTimerTag::FadeInSeedBank,
+            SceneTag,
+        ));
+    }
     commands.spawn((
         GameTimer(Timer::from_seconds(time, TimerMode::Once)),
         GameTimerTag::FadeInCars,
@@ -547,6 +653,7 @@ pub(crate) fn setup_enter_timer(mut commands: Commands, current_level: Res<Curre
 pub(crate) fn setup_init_timer(
     mut commands: Commands,
     userdata: Res<UserData>,
+    current_level: Res<CurrentLevel>,
     plant_registry: Res<PlantRegistry>,
 ) {
     let mut time = 3.0;
@@ -559,9 +666,12 @@ pub(crate) fn setup_init_timer(
     ));
     time += 4.0;
 
-    // 检查是否需要选卡
-    // TODO: 目前仅判断植物槽数量
-    if userdata.unlock_plugins.len() <= userdata.plant_solt_count {
+    // 检查是否需要选卡，满足以下任意条件则无需选卡
+    // 1. 植物小于植物槽数量
+    // 2. 传送带关卡
+    if userdata.unlock_plugins.len() <= userdata.plant_solt_count
+        || current_level.conveyor_belt.is_some()
+    {
         // 植物数量小于植物槽，无需选卡
         // 需要在seedbank位置生成对应植物
         let mut unlock_plugins = userdata.unlock_plugins.iter().collect::<Vec<_>>();
@@ -811,10 +921,23 @@ pub(crate) fn setup_choose_seed_timer(mut commands: Commands) {
     ));
 }
 
-pub(crate) fn setup_game_bgm(mut commands: Commands) {
+pub(crate) fn setup_game_bgm(mut commands: Commands, current_level: Res<CurrentLevel>) {
+    let music_table = match &current_level.music {
+        Music::Inherited => match &current_level.background {
+            LevelBackground::Day { .. } => MainMusicTable::Grasswalk,
+            LevelBackground::Night => MainMusicTable::Moongrains,
+            LevelBackground::Swim => MainMusicTable::WateryGraves,
+            LevelBackground::SwimFog => MainMusicTable::RigorMormist,
+            LevelBackground::Roof => MainMusicTable::GrazeTheRoof,
+            LevelBackground::RoofNight => MainMusicTable::BrainiacManiac, // only 5-10 boss fight
+        },
+        Music::None => return,
+        Music::MiniGame => MainMusicTable::Loonboon,
+        Music::UltimateBattle => MainMusicTable::UltimateBattle,
+    };
     commands.spawn((
         FtxmSource {
-            pot: MainMusicTable::Grasswalk.into(),
+            pot: music_table.into(),
         },
         SceneTag,
     ));
